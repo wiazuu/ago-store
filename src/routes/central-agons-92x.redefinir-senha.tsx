@@ -1,0 +1,14 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { KeyRound } from "lucide-react";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export const Route = createFileRoute("/central-agons-92x/redefinir-senha")({ validateSearch: z.object({ token: z.string().catch("") }), component: ResetPassword });
+function ResetPassword() {
+  const { token } = Route.useSearch(); const navigate = useNavigate(); const [password, setPassword] = useState(""); const [confirmation, setConfirmation] = useState(""); const [error, setError] = useState(""); const [loading, setLoading] = useState(false);
+  async function submit(event: React.FormEvent) { event.preventDefault(); setError(""); if (password !== confirmation) { setError("As senhas não são iguais."); return; } setLoading(true); const response = await fetch("/api/password-reset", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, password }) }); const data = (await response.json()) as { error?: string }; if (!response.ok) setError(data.error || "Não foi possível redefinir."); else navigate({ to: "/central-agons-92x/entrar" }); setLoading(false); }
+  return <main className="grid min-h-screen place-items-center bg-muted/40 px-4"><form onSubmit={submit} className="w-full max-w-md rounded-3xl border bg-card p-7 shadow-xl"><div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-primary/20 text-primary-dark"><KeyRound /></div><h1 className="font-display text-3xl">Criar nova senha</h1><p className="mt-2 text-sm text-muted-foreground">Use pelo menos 12 caracteres, com letra maiúscula, minúscula e número.</p>{!token && <p className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">Link incompleto. Solicite uma nova recuperação.</p>}<div className="mt-6 space-y-4"><div><Label htmlFor="new-password">Nova senha</Label><Input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={12} required /></div><div><Label htmlFor="confirm-password">Confirmar senha</Label><Input id="confirm-password" type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} minLength={12} required /></div></div>{error && <p role="alert" className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}<Button className="mt-5 h-11 w-full" disabled={loading || !token}>{loading ? "Alterando..." : "Salvar nova senha"}</Button><Link to="/central-agons-92x/entrar" className="mt-5 block text-center text-sm text-muted-foreground hover:text-primary">Voltar para o login</Link></form></main>;
+}

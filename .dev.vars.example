@@ -1,0 +1,5 @@
+# Copie para .dev.vars somente no desenvolvimento local com Wrangler.
+STRIPE_SECRET_KEY=sk_test_SUBSTITUA
+STRIPE_WEBHOOK_SECRET=whsec_substitua_no_ambiente
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=troque_por_uma_senha_forte

@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: agons-store
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_POOL_SIZE
+        value: "5"
+      - key: AUTH_PEPPER
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_INITIAL_USERNAME
+        sync: false
+      - key: ADMIN_INITIAL_EMAIL
+        sync: false
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false
+      - key: ADMIN_NOTIFICATION_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: agô <pedidos@agons.com.br>
+      - key: EMAIL_REPLY_TO
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false

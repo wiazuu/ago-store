@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Símbolo agô</title>
+  <rect width="64" height="64" rx="20" fill="#F5A623"/>
+  <path d="M17 38.5 32 29l15 9.5V27L32 17.5 17 27Z" fill="#FFF6E6"/>
+</svg>

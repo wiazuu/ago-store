@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agons
+      POSTGRES_USER: agons
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
+    volumes:
+      - agons_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agons -d agons"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  web:
+    build: .
+    restart: unless-stopped
+    ports: ["8080:3000"]
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
+      DATABASE_URL: postgresql://agons:${POSTGRES_PASSWORD}@postgres:5432/agons
+      DATABASE_SSL: "false"
+      AUTH_PEPPER: ${AUTH_PEPPER:?Defina AUTH_PEPPER no arquivo .env}
+      SESSION_SECRET: ${SESSION_SECRET:?Defina SESSION_SECRET no arquivo .env}
+      ADMIN_INITIAL_USERNAME: ${ADMIN_INITIAL_USERNAME:?Defina ADMIN_INITIAL_USERNAME no arquivo .env}
+      ADMIN_INITIAL_EMAIL: ${ADMIN_INITIAL_EMAIL:?Defina ADMIN_INITIAL_EMAIL no arquivo .env}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:?Defina ADMIN_INITIAL_PASSWORD no arquivo .env}
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL:?Defina ADMIN_NOTIFICATION_EMAIL no arquivo .env}
+      RESEND_API_KEY: ${RESEND_API_KEY:?Defina RESEND_API_KEY no arquivo .env}
+      EMAIL_FROM: ${EMAIL_FROM:?Defina EMAIL_FROM no arquivo .env}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:?Defina EMAIL_REPLY_TO no arquivo .env}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:?Defina STRIPE_SECRET_KEY no arquivo .env}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?Defina STRIPE_WEBHOOK_SECRET no arquivo .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  agons_postgres:
