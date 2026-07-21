@@ -76,7 +76,7 @@ function ProductPage() {
           </h1>
           <p className="text-muted-foreground mb-6">{p.shortDescription}</p>
 
-          <div className="flex items-baseline gap-3 mb-6">
+          {price > 0 ? <><div className="flex items-baseline gap-3 mb-6">
             {p.promoPrice && (
               <span className="text-muted-foreground line-through">{brl(p.price)}</span>
             )}
@@ -102,7 +102,7 @@ function ProductPage() {
               <ShoppingBag className="w-4 h-4" />{" "}
               {p.stock > 0 ? "Adicionar à sacola" : "Produto esgotado"}
             </Button>
-          </div>
+          </div></> : <div className="mb-6 rounded-2xl bg-orange-soft p-5"><strong className="font-display text-xl">Disponível nos planos A1 e A2</strong><p className="mt-1 text-sm text-muted-foreground">Escolha um plano para montar seu cardápio com esta refeição.</p></div>}
 
           <div className="mb-6 grid grid-cols-2 gap-3 rounded-2xl bg-orange-soft p-4 sm:grid-cols-4">
             {[

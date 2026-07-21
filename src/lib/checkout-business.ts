@@ -19,7 +19,7 @@ export async function buildVerifiedCheckout(payload: CheckoutRequest) {
   const emporium = await listEmporiumProducts();
   const catalog = new Map([
     ...data.products
-      .filter((product) => product.active)
+      .filter((product) => product.active && priceOf(product) > 0)
       .map(
         (product) =>
           [

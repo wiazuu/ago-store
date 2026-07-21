@@ -11,7 +11,7 @@ export const emporiumInputSchema = z.object({
   category: z.string().trim().min(2).max(80),
   shortDescription: z.string().trim().min(2).max(240),
   description: z.string().trim().min(2).max(5000),
-  image: z.string().trim().url().max(2000),
+  image: z.string().trim().max(900_000).refine((value) => value.startsWith("https://") || value.startsWith("data:image/"), "Imagem inválida."),
   priceCents: z.number().int().min(50).max(10_000_000),
   stock: z.number().int().min(0).max(1_000_000),
   active: z.boolean(),

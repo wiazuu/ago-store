@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { brl } from "@/lib/format";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export const Route = createFileRoute("/central-agons-92x/produtos")({ component: AdminProducts });
 
@@ -181,13 +182,7 @@ function AdminProducts() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Imagem (URL)</Label>
-                  <Input
-                    value={editing.image}
-                    onChange={(e) => setEditing({ ...editing, image: e.target.value })}
-                  />
-                </div>
+                <ImageUploadField label="Imagem principal" value={editing.image} onChange={(image) => setEditing({ ...editing, image })} />
                 <div>
                   <Label>Preço</Label>
                   <Input

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export const Route = createFileRoute("/central-agons-92x/categorias")({ component: AdminCategorias });
 
@@ -107,13 +108,7 @@ function AdminCategorias() {
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Imagem (URL)</Label>
-                <Input
-                  value={editing.image}
-                  onChange={(e) => setEditing({ ...editing, image: e.target.value })}
-                />
-              </div>
+              <ImageUploadField value={editing.image} onChange={(image) => setEditing({ ...editing, image })} />
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Ordem</Label>

@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export const Route = createFileRoute("/central-agons-92x/aparencia")({ component: AdminAparencia });
 
@@ -34,17 +35,8 @@ function AdminAparencia() {
           <Label>Logo (texto)</Label>
           <Input value={app.logoText} onChange={(e) => update({ logoText: e.target.value })} />
         </div>
-        <div>
-          <Label>Logo (URL — opcional)</Label>
-          <Input value={app.logoUrl ?? ""} onChange={(e) => update({ logoUrl: e.target.value })} />
-        </div>
-        <div>
-          <Label>Favicon (URL — opcional)</Label>
-          <Input
-            value={app.faviconUrl ?? ""}
-            onChange={(e) => update({ faviconUrl: e.target.value })}
-          />
-        </div>
+        <ImageUploadField label="Logo (opcional)" value={app.logoUrl ?? ""} onChange={(logoUrl) => update({ logoUrl })} maxDimension={1000} />
+        <ImageUploadField label="Favicon (opcional)" value={app.faviconUrl ?? ""} onChange={(faviconUrl) => update({ faviconUrl })} maxDimension={512} />
       </div>
 
       <div className="bg-card p-6 rounded-2xl brand-shadow space-y-4">

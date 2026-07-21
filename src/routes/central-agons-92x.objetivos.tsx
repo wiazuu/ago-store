@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export const Route = createFileRoute("/central-agons-92x/objetivos")({ component: AdminObjetivos });
 
@@ -113,13 +114,7 @@ function AdminObjetivos() {
                   onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Banner (URL)</Label>
-                <Input
-                  value={editing.image}
-                  onChange={(e) => setEditing({ ...editing, image: e.target.value })}
-                />
-              </div>
+              <ImageUploadField label="Banner" value={editing.image} onChange={(image) => setEditing({ ...editing, image })} />
               <div>
                 <Label>Ordem</Label>
                 <Input

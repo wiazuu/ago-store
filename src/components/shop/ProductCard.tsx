@@ -68,12 +68,13 @@ export function ProductCard({ p }: { p: Product }) {
         </p>
 
         <div className="grid grid-cols-3 gap-1 pt-1 text-center text-[9px] font-semibold text-muted-foreground sm:text-xs">
-          <span className="rounded-lg bg-muted px-1 py-1.5">{p.weightG}g</span>
           <span className="rounded-lg bg-muted px-1 py-1.5">{p.calories} kcal</span>
           <span className="rounded-lg bg-muted px-1 py-1.5">{p.protein}g prot.</span>
+          <span className="rounded-lg bg-muted px-1 py-1.5">{p.carbs}g carb.</span>
         </div>
 
         <div className="mt-auto flex flex-col items-stretch gap-2 pt-2 sm:flex-row sm:items-end sm:justify-between">
+          {finalPrice > 0 ? <>
           <div className="flex flex-col">
             {p.promoPrice && p.promoPrice < p.price && (
               <span className="text-xs text-muted-foreground line-through">{brl(p.price)}</span>
@@ -93,6 +94,7 @@ export function ProductCard({ p }: { p: Product }) {
             <ShoppingBag className="w-4 h-4" />
             {p.stock > 0 ? "Adicionar" : "Esgotado"}
           </Button>
+          </> : <div className="w-full rounded-xl bg-orange-soft px-3 py-2 text-center text-xs font-extrabold text-primary-dark">Disponível nos planos</div>}
         </div>
       </div>
     </article>

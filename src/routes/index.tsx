@@ -186,15 +186,15 @@ function HomePage() {
       <section className="container-page py-10 sm:py-14">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="section-kicker">Os queridinhos</p>
-            <h2 className="mt-1 font-display text-3xl md:text-4xl">Destaques da semana</h2>
+            <p className="section-kicker">Escolha suas refeições</p>
+            <h2 className="mt-1 font-display text-3xl md:text-4xl">Cardápio da semana</h2>
             <p className="text-muted-foreground mt-2">
-              O que está saindo mais rápido da nossa cozinha
+              Consulte as informações nutricionais de cada opção
             </p>
           </div>
           <Link
             to="/categoria/$slug"
-            params={{ slug: "dia-a-dia" }}
+            params={{ slug: "cardapio" }}
             className="text-primary text-sm font-medium hidden md:block"
           >
             Ver tudo →
@@ -209,23 +209,23 @@ function HomePage() {
     ),
 
     kits: (
-      <section className="container-page py-10 sm:py-14">
+      <section id="planos" className="container-page scroll-mt-28 py-10 sm:py-14">
         <div className="mb-8">
-          <p className="section-kicker">Mais praticidade</p>
-          <h2 className="mt-1 font-display text-3xl md:text-4xl">Kits semanais</h2>
-          <p className="text-muted-foreground mt-2">Cardápios prontos com desconto exclusivo</p>
+          <p className="section-kicker">Escolha sua frequência</p>
+          <h2 className="mt-1 font-display text-3xl md:text-4xl">Planos A1 e A2</h2>
+          <p className="text-muted-foreground mt-2">Opções semanais, mensais e trimestrais</p>
         </div>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
-          {kits.slice(0, 3).map((k) => (
+          {kits.slice(0, 6).map((k) => (
             <div
               key={k.id}
               className="group flex flex-col overflow-hidden rounded-3xl bg-card brand-shadow"
             >
               <div className="relative aspect-[4/3]">
                 <img src={k.image} alt={k.name} className="w-full h-full object-cover" />
-                <span className="absolute top-3 left-3 bg-secondary text-secondary-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                {k.discountPct > 0 && <span className="absolute top-3 left-3 bg-secondary text-secondary-foreground text-xs font-semibold px-3 py-1 rounded-full">
                   -{k.discountPct}%
-                </span>
+                </span>}
               </div>
               <div className="p-5 flex flex-col flex-1">
                 <div className="font-display text-xl mb-1">{k.name}</div>

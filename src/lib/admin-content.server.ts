@@ -21,7 +21,11 @@ export function looksLikeAdminData(value: unknown): value is AdminData {
 
 function sanitizedClone(data: AdminData): AdminData {
   const clean = JSON.parse(JSON.stringify(data, (_key, value) =>
-    typeof value === "string" ? value.replaceAll("\u0000", "").slice(0, 200_000) : value,
+    typeof value === "string"
+      ? value
+          .replaceAll("\u0000", "")
+          .slice(0, value.startsWith("data:image/") ? 900_000 : 200_000)
+      : value,
   )) as AdminData;
   if (!looksLikeAdminData(clean)) throw new Error("Conteúdo administrativo inválido.");
   return clean;

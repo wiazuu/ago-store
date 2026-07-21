@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export const Route = createFileRoute("/central-agons-92x/home")({ component: AdminHome });
 
@@ -42,7 +43,7 @@ function AdminHome() {
         <h2 className="font-display text-xl">Banner principal</h2>
         <Field label="Título"><Textarea value={home.hero.title} onChange={(event) => update({ hero: { ...home.hero, title: event.target.value } })} /></Field>
         <Field label="Subtítulo"><Textarea value={home.hero.subtitle} onChange={(event) => update({ hero: { ...home.hero, subtitle: event.target.value } })} /></Field>
-        <Field label="Imagem (URL)"><Input value={home.hero.image} onChange={(event) => update({ hero: { ...home.hero, image: event.target.value } })} /></Field>
+        <ImageUploadField value={home.hero.image} onChange={(image) => update({ hero: { ...home.hero, image } })} />
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Botão principal"><Input value={home.hero.ctaText} onChange={(event) => update({ hero: { ...home.hero, ctaText: event.target.value } })} /></Field>
           <Field label="Link principal"><Input value={home.hero.ctaLink} onChange={(event) => update({ hero: { ...home.hero, ctaLink: event.target.value } })} /></Field>
@@ -75,7 +76,7 @@ function AdminHome() {
         <div className="flex items-center gap-3"><Switch checked={home.midBanner.active} onCheckedChange={(active) => update({ midBanner: { ...home.midBanner, active } })} /><span className="text-sm">Ativo</span></div>
         <Field label="Título"><Input value={home.midBanner.title} onChange={(event) => update({ midBanner: { ...home.midBanner, title: event.target.value } })} /></Field>
         <Field label="Subtítulo"><Input value={home.midBanner.subtitle} onChange={(event) => update({ midBanner: { ...home.midBanner, subtitle: event.target.value } })} /></Field>
-        <Field label="Imagem (URL)"><Input value={home.midBanner.image} onChange={(event) => update({ midBanner: { ...home.midBanner, image: event.target.value } })} /></Field>
+        <ImageUploadField value={home.midBanner.image} onChange={(image) => update({ midBanner: { ...home.midBanner, image } })} />
         <div className="grid gap-4 md:grid-cols-2"><Field label="Texto do botão"><Input value={home.midBanner.ctaText} onChange={(event) => update({ midBanner: { ...home.midBanner, ctaText: event.target.value } })} /></Field><Field label="Link do botão"><Input value={home.midBanner.ctaLink} onChange={(event) => update({ midBanner: { ...home.midBanner, ctaLink: event.target.value } })} /></Field></div>
       </section>
 
@@ -87,7 +88,7 @@ function AdminHome() {
         <h2 className="font-display text-xl">Sobre a marca</h2>
         <Field label="Título"><Input value={home.aboutShort.title} onChange={(event) => update({ aboutShort: { ...home.aboutShort, title: event.target.value } })} /></Field>
         <Field label="Texto"><Textarea rows={4} value={home.aboutShort.text} onChange={(event) => update({ aboutShort: { ...home.aboutShort, text: event.target.value } })} /></Field>
-        <Field label="Imagem (URL)"><Input value={home.aboutShort.image} onChange={(event) => update({ aboutShort: { ...home.aboutShort, image: event.target.value } })} /></Field>
+        <ImageUploadField value={home.aboutShort.image} onChange={(image) => update({ aboutShort: { ...home.aboutShort, image } })} />
       </section>
 
       <Collection title="Perguntas frequentes" description="Use respostas reais sobre entrega, conservação e atendimento." onAdd={() => update({ faq: [...home.faq, { id: crypto.randomUUID(), question: "", answer: "" }] })}>
