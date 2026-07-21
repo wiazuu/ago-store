@@ -24,13 +24,38 @@ const dishes = [
 ];
 const slugify = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const products = dishes.map(([name, calories, protein, carbs, fats, tags], index) => ({
-  id: `menu-${index + 1}`, name, slug: slugify(name), categoryId: "cardapio", objectiveIds: [],
+  id: `menu-${index + 1}`, name, slug: slugify(name), categoryId: "cardapio",
+  objectiveIds: [
+    ...(calories <= 400 ? ["emagrecimento"] : []),
+    ...(protein >= 30 ? ["massa-muscular"] : []),
+    "alimentacao-nutritiva",
+  ],
   image: photo(imageIds[index]), gallery: [photo(imageIds[index])], shortDescription: `${protein}g de proteína · ${carbs}g de carboidratos · ${fats}g de gorduras`,
   description: "Opção disponível para montagem dos planos A1 e A2. Consulte a disponibilidade no cardápio da semana.",
   price: 0, stock: 999, weightG: 0, calories, protein, carbs, fats, ingredients: "", allergens: tags.filter((tag) => tag.startsWith("contém")).join(", "),
   preparation: "Siga as orientações de preparo enviadas com a refeição.", validity: "Consulte a etiqueta da embalagem.", storage: "Armazene na geladeira ou no freezer conforme a orientação recebida.",
   tags, badge: tags.includes("novo") ? "novo" : "", active: true, featured: index < 8, isNew: tags.includes("novo"), bestSeller: false,
 }));
+const objectives = [
+  {
+    id: "emagrecimento", name: "Emagrecimento", slug: "emagrecimento",
+    description: "Opções com até 400 kcal para ajudar na organização de uma rotina alimentar mais leve.",
+    icon: "Scale", image: photo("1546069901-ba9599a7e63c"), order: 1, active: true,
+    productIds: products.filter((product) => product.calories <= 400).map((product) => product.id),
+  },
+  {
+    id: "massa-muscular", name: "Massa muscular", slug: "massa-muscular",
+    description: "Pratos com 30 g ou mais de proteína para compor uma rotina focada em ganho de massa.",
+    icon: "Dumbbell", image: photo("1543353071-10c8ba85a904"), order: 2, active: true,
+    productIds: products.filter((product) => product.protein >= 30).map((product) => product.id),
+  },
+  {
+    id: "alimentacao-nutritiva", name: "Alimentação nutritiva", slug: "alimentacao-nutritiva",
+    description: "Refeições variadas com informações nutricionais claras para facilitar suas escolhas.",
+    icon: "HeartPulse", image: photo("1490645935967-10de6ba17061"), order: 3, active: true,
+    productIds: products.map((product) => product.id),
+  },
+];
 const kitImageA1 = photo("1543353071-10c8ba85a904");
 const kitImageA2 = photo("1540189549336-e6e99c3679fe");
 const kits = [
@@ -44,6 +69,9 @@ const kits = [
 const sections = ["hero", "benefits", "categories", "featured", "kits", "howItWorks", "faq"].map((key, index) => ({ key, label: ({ hero: "Banner principal", benefits: "Benefícios", categories: "Compre por categoria", featured: "Pratos do cardápio", kits: "Planos", howItWorks: "Como funciona", faq: "Perguntas frequentes" })[key], active: true, order: index + 1 }));
 for (const [key, label] of [["objectives", "Compre por objetivo"], ["midBanner", "Banner promocional"], ["testimonials", "Depoimentos"], ["about", "Sobre a marca"]]) sections.push({ key, label, active: false, order: sections.length + 1 });
 
+const objectivesSection = sections.find((section) => section.key === "objectives");
+if (objectivesSection) objectivesSection.active = true;
+
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined, max: 1 });
 try {
   const result = await pool.query("select data from site_content where key = 'published' limit 1");
@@ -52,7 +80,7 @@ try {
   const next = {
     ...current,
     categories: [{ id: "cardapio", name: "Cardápio", slug: "cardapio", description: "Pratos disponíveis para montar os planos A1 e A2.", image: photo("1546069901-ba9599a7e63c"), color: "#F5A623", order: 1, active: true }],
-    objectives: [], products, kits, coupons: [], orders: [],
+    objectives, products, kits, coupons: [], orders: [],
     banners: [
       { id: "inicio-planos", location: "home-hero", title: "Planos A1 e A2", subtitle: "Escolha a frequência que combina com a sua rotina.", image: kitImageA1, link: "/", ctaText: "Conhecer planos", active: true, order: 1 },
       { id: "inicio-cardapio", location: "home-mid", title: "Monte seu cardápio", subtitle: "Escolha suas refeições entre as opções disponíveis da semana.", image: photo("1546069901-ba9599a7e63c"), link: "/categoria/cardapio", ctaText: "Ver pratos", active: true, order: 2 },
