@@ -34,10 +34,10 @@ export function Header() {
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!search.trim()) return;
+    if (!search.trim() || categories.length === 0) return;
     navigate({
       to: "/categoria/$slug",
-      params: { slug: "dia-a-dia" },
+      params: { slug: categories[0].slug },
       search: { q: search.trim() } as never,
     });
     setSearch("");
@@ -46,11 +46,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur-xl">
-      {home.promoBar.active && (
+      {home.promoBar.active && home.promoBar.text.trim() && (
         <div className="bg-secondary px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-cream sm:text-xs">
-          <Link to={home.promoBar.link as never} className="hover:text-primary">
+          {home.promoBar.link ? <Link to={home.promoBar.link as never} className="hover:text-primary">
             {home.promoBar.text}
-          </Link>
+          </Link> : <span>{home.promoBar.text}</span>}
         </div>
       )}
 
@@ -142,20 +142,6 @@ export function Header() {
               {category.name}
             </Link>
           ))}
-          <Link
-            to="/categoria/$slug"
-            params={{ slug: "kits-semanais" }}
-            className="shrink-0 rounded-full bg-orange-soft px-3 py-1 text-primary-dark"
-          >
-            Kits semanais
-          </Link>
-          <Link
-            to="/objetivo/$slug"
-            params={{ slug: "emagrecimento" }}
-            className="ml-auto shrink-0 text-secondary"
-          >
-            Compre por objetivo
-          </Link>
         </div>
       </nav>
 

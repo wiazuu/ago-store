@@ -78,14 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "agô · Marmitas saudáveis, prontas em minutos" },
+      { title: "agô" },
       {
         name: "description",
-        content:
-          "Marmitas saudáveis e congeladas com ingredientes selecionados. Chegam prontas para aquecer, sem conservantes.",
+        content: "Loja oficial agô.",
       },
-      { property: "og:title", content: "agô · Marmitas saudáveis" },
-      { property: "og:description", content: "Comida de verdade, na sua rotina." },
+      { property: "og:title", content: "agô" },
+      { property: "og:description", content: "Loja oficial agô." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

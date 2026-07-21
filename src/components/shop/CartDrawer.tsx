@@ -87,7 +87,7 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            <div className="px-5 py-3 bg-muted/50 border-b">
+            {freeShipMin > 0 && <div className="px-5 py-3 bg-muted/50 border-b">
               {subtotal < freeShipMin ? (
                 <>
                   <div className="text-xs text-muted-foreground mb-1.5">
@@ -106,7 +106,7 @@ export function CartDrawer() {
                   🎉 Você ganhou frete grátis!
                 </div>
               )}
-            </div>
+            </div>}
 
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {items.map((i) => (

@@ -10,6 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
     "db:import-local": "node scripts/import-local-content.mjs",
+    "db:clear-demo": "node scripts/clear-demo-content.mjs",
     "db:studio": "drizzle-kit studio",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",

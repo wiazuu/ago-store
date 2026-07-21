@@ -42,29 +42,39 @@ function HomePage() {
   const add = useShopStore((s) => s.add);
 
   const featured = products.filter((p) => p.featured && p.active).slice(0, 8);
-  const sections = home.sections.filter((s) => s.active).sort((a, b) => a.order - b.order);
+  const hasContent: Record<string, boolean> = {
+    hero: Boolean(home.hero.title.trim() && home.hero.image.trim()),
+    benefits: home.benefits.some((item) => item.title.trim()),
+    categories: cats.length > 0,
+    objectives: objectives.length > 0,
+    featured: featured.length > 0,
+    kits: kits.length > 0,
+    midBanner: Boolean(home.midBanner.active && home.midBanner.title.trim() && home.midBanner.image.trim()),
+    howItWorks: home.howItWorks.some((item) => item.title.trim()),
+    testimonials: home.testimonials.some((item) => item.name.trim() && item.text.trim()),
+    about: Boolean(home.aboutShort.title.trim() && home.aboutShort.text.trim() && home.aboutShort.image.trim()),
+    faq: home.faq.some((item) => item.question.trim() && item.answer.trim()),
+  };
+  const sections = home.sections
+    .filter((section) => section.active && hasContent[section.key])
+    .sort((a, b) => a.order - b.order);
 
   const render: Record<string, React.ReactNode> = {
     hero: (
       <section className="container-page pt-4 sm:pt-6 lg:pt-10">
         <div className="relative grid overflow-hidden rounded-[2rem] bg-secondary text-cream brand-shadow-lg lg:grid-cols-[1.02fr_.98fr]">
           <div className="relative z-10 flex flex-col justify-center p-7 sm:p-10 lg:min-h-[590px] lg:p-16">
-            <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-cream/20 bg-cream/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
-              <span className="h-2 w-2 rounded-full bg-primary" /> Refeições artesanais saudáveis
-            </div>
             <h1 className="max-w-2xl whitespace-pre-line font-display text-[2.65rem] leading-[.98] sm:text-6xl lg:text-7xl">
               {home.hero.title}
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-cream/75 sm:text-lg">
-              {home.hero.subtitle}
-            </p>
+            {home.hero.subtitle && <p className="mt-5 max-w-xl text-base leading-relaxed text-cream/75 sm:text-lg">{home.hero.subtitle}</p>}
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to={home.hero.ctaLink as "/"}>
+              {home.hero.ctaText && home.hero.ctaLink && <Link to={home.hero.ctaLink as "/"}>
                 <Button size="lg" className="w-full sm:w-auto">
                   {home.hero.ctaText}
                 </Button>
-              </Link>
-              <Link to={home.hero.ctaSecondaryLink as "/"}>
+              </Link>}
+              {home.hero.ctaSecondaryText && home.hero.ctaSecondaryLink && <Link to={home.hero.ctaSecondaryLink as "/"}>
                 <Button
                   size="lg"
                   variant="outline"
@@ -72,12 +82,7 @@ function HomePage() {
                 >
                   {home.hero.ctaSecondaryText}
                 </Button>
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-xs text-cream/65">
-              <span>✓ Sem conservantes</span>
-              <span>✓ Ingredientes frescos</span>
-              <span>✓ Prontas em minutos</span>
+              </Link>}
             </div>
           </div>
           <div className="relative m-3 min-h-80 overflow-hidden rounded-[1.55rem] sm:m-5 lg:min-h-0">
@@ -87,12 +92,6 @@ function HomePage() {
               className="absolute inset-0 h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 via-transparent to-transparent" />
-            <div className="absolute bottom-4 left-4 rounded-2xl bg-cream/95 px-4 py-3 text-charcoal shadow-lg sm:bottom-6 sm:left-6">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-secondary">
-                Feito à mão
-              </div>
-              <div className="mt-0.5 font-display text-lg">Cuidado em cada detalhe</div>
-            </div>
           </div>
           <div className="pointer-events-none absolute -bottom-16 -left-14 h-52 w-52 rounded-full border-[34px] border-primary/15" />
         </div>
@@ -102,7 +101,7 @@ function HomePage() {
     benefits: (
       <section className="container-page py-12 sm:py-16">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
-          {home.benefits.map((b) => (
+          {home.benefits.filter((item) => item.title.trim()).map((b) => (
             <div
               key={b.id}
               className="rounded-2xl border border-border/70 bg-card/60 p-4 text-center last:col-span-2 md:last:col-span-1 sm:p-5"
@@ -277,7 +276,7 @@ function HomePage() {
           <p className="text-muted-foreground mt-2">Do clique ao prato, em 4 passos</p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-          {home.howItWorks.map((s) => (
+          {home.howItWorks.filter((item) => item.title.trim()).map((s) => (
             <div
               key={s.id}
               className="relative overflow-hidden rounded-3xl bg-card p-6 text-center brand-shadow"
@@ -302,7 +301,7 @@ function HomePage() {
           <h2 className="font-display text-3xl md:text-4xl">Quem come, conta</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {home.testimonials.map((t) => (
+          {home.testimonials.filter((item) => item.name.trim() && item.text.trim()).map((t) => (
             <div key={t.id} className="rounded-3xl bg-card p-6 brand-shadow">
               <div className="flex gap-0.5 text-primary mb-3">{"★".repeat(t.rating)}</div>
               <p className="text-sm mb-4 italic">"{t.text}"</p>
@@ -343,7 +342,7 @@ function HomePage() {
             <h2 className="font-display text-3xl md:text-4xl">Perguntas frequentes</h2>
           </div>
           <Accordion type="single" collapsible className="space-y-2">
-            {home.faq.map((f) => (
+            {home.faq.filter((item) => item.question.trim() && item.answer.trim()).map((f) => (
               <AccordionItem key={f.id} value={f.id} className="border rounded-xl px-4 bg-card">
                 <AccordionTrigger className="text-left">{f.question}</AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">{f.answer}</AccordionContent>
@@ -357,6 +356,13 @@ function HomePage() {
 
   return (
     <main>
+      {sections.length === 0 && (
+        <section className="container-page py-20 text-center sm:py-28">
+          <p className="section-kicker">Loja em atualização</p>
+          <h1 className="mx-auto mt-2 max-w-2xl font-display text-4xl sm:text-5xl">O cardápio será publicado em breve.</h1>
+          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Estamos preparando as informações oficiais da loja.</p>
+        </section>
+      )}
       {sections.map((s) => (
         <div key={s.key}>{render[s.key]}</div>
       ))}
