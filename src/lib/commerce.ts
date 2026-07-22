@@ -58,6 +58,7 @@ export function calculateOrderSummary({
   coupons,
   freeShippingMin,
   flatShipping = 15,
+  fulfillmentType = "delivery",
   today,
 }: {
   lines: CommerceLine[];
@@ -65,11 +66,12 @@ export function calculateOrderSummary({
   coupons: Coupon[];
   freeShippingMin: number;
   flatShipping?: number;
+  fulfillmentType?: "delivery" | "pickup";
   today?: Date;
 }): OrderSummary {
   const subtotal = money(lines.reduce((sum, line) => sum + line.unitPrice * line.qty, 0));
   const couponResult = evaluateCoupon(couponCode, subtotal, coupons, today);
-  const shipping = subtotal === 0 || subtotal >= freeShippingMin ? 0 : flatShipping;
+  const shipping = subtotal === 0 || fulfillmentType === "pickup" ? 0 : flatShipping;
   const total = money(Math.max(0, subtotal + shipping - couponResult.discount));
 
   return { subtotal, shipping, total, ...couponResult };

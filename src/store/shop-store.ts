@@ -7,6 +7,8 @@ export interface CartItem {
   image: string;
   price: number;
   qty: number;
+  selections?: { productId: string; name: string; qty: number }[];
+  subscriptionInterval?: "weekly" | "monthly" | "quarterly";
 }
 
 interface ShopState {
@@ -16,6 +18,7 @@ interface ShopState {
   cep: string;
   authed: boolean;
   adminAuthed: boolean;
+  favoriteIds: string[];
 
   add: (i: Omit<CartItem, "qty"> & { qty?: number }) => void;
   remove: (id: string) => void;
@@ -28,6 +31,7 @@ interface ShopState {
   setCep: (c: string) => void;
   setAuth: (v: boolean) => void;
   setAdminAuth: (v: boolean) => void;
+  setFavorites: (ids: string[]) => void;
 }
 
 export const useShopStore = create<ShopState>()(
@@ -39,6 +43,7 @@ export const useShopStore = create<ShopState>()(
       cep: "",
       authed: false,
       adminAuthed: false,
+      favoriteIds: [],
       add: (i) =>
         set((s) => {
           const existing = s.items.find((x) => x.productId === i.productId);
@@ -70,6 +75,7 @@ export const useShopStore = create<ShopState>()(
       setCep: (c) => set({ cep: c }),
       setAuth: (v) => set({ authed: v }),
       setAdminAuth: (v) => set({ adminAuthed: v }),
+      setFavorites: (ids) => set({ favoriteIds: ids }),
     }),
     { name: "ago-shop-v1" },
   ),

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe.server";
-import { applyStripeEvent } from "@/lib/orders.server";
+import { applyStripeEvent, applyStripeSubscriptionEvent } from "@/lib/orders.server";
 
 export const Route = createFileRoute("/api/stripe-webhook")({
   server: {
@@ -25,7 +25,17 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             event.type === "checkout.session.async_payment_succeeded"
           ) {
             const session = event.data.object;
-            await applyStripeEvent({ id: event.id, type: event.type, sessionId: session.id, orderId: session.client_reference_id, paymentStatus: session.payment_status });
+            await applyStripeEvent({
+              id: event.id,
+              type: event.type,
+              sessionId: session.id,
+              orderId: session.client_reference_id,
+              paymentStatus: session.payment_status,
+              subscriptionId:
+                typeof session.subscription === "string"
+                  ? session.subscription
+                  : session.subscription?.id || null,
+            });
             console.info("ago.checkout.paid", {
               eventId: event.id,
               sessionId: session.id,
@@ -35,8 +45,27 @@ export const Route = createFileRoute("/api/stripe-webhook")({
             });
           }
 
+          if (
+            event.type === "customer.subscription.updated" ||
+            event.type === "customer.subscription.deleted"
+          ) {
+            const subscription = event.data.object;
+            await applyStripeSubscriptionEvent({
+              id: event.id,
+              type: event.type,
+              subscriptionId: subscription.id,
+              status: subscription.status,
+            });
+          }
+
           if (event.type === "checkout.session.async_payment_failed") {
-            await applyStripeEvent({ id: event.id, type: event.type, sessionId: event.data.object.id, orderId: event.data.object.client_reference_id, paymentStatus: event.data.object.payment_status });
+            await applyStripeEvent({
+              id: event.id,
+              type: event.type,
+              sessionId: event.data.object.id,
+              orderId: event.data.object.client_reference_id,
+              paymentStatus: event.data.object.payment_status,
+            });
             console.warn("ago.checkout.payment_failed", {
               eventId: event.id,
               sessionId: event.data.object.id,

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import {
   ArrowLeft,
@@ -41,6 +41,9 @@ const maskPhone = (value: string) => {
 
 type Customer = { name: string; email: string; phone: string; cpf: string };
 type Delivery = {
+  fulfillmentType: "delivery" | "pickup";
+  scheduledDate: string;
+  deliveryWindow: "manha" | "tarde" | "noite";
   cep: string;
   street: string;
   number: string;
@@ -49,6 +52,13 @@ type Delivery = {
   city: string;
   state: string;
   notes: string;
+};
+type FulfillmentDay = {
+  day: string;
+  deliveryEnabled: boolean;
+  pickupEnabled: boolean;
+  available: number;
+  note: string | null;
 };
 
 export const Route = createFileRoute("/checkout")({
@@ -65,18 +75,78 @@ function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableDays, setAvailableDays] = useState<FulfillmentDay[]>([]);
   const attemptId = useRef<string | null>(null);
   const [customer, setCustomer] = useState<Customer>({ name: "", email: "", phone: "", cpf: "" });
   const [delivery, setDelivery] = useState<Delivery>({
+    fulfillmentType: "delivery",
+    scheduledDate: "",
+    deliveryWindow: "tarde",
     cep: "",
     street: "",
     number: "",
     complement: "",
     district: "",
-    city: "",
+    city: "Manaus",
     state: "AM",
     notes: "",
   });
+
+  useEffect(() => {
+    void fetch("/api/delivery-calendar", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload: { days?: FulfillmentDay[] }) => setAvailableDays(payload.days || []))
+      .catch(() => setAvailableDays([]));
+    void fetch("/api/customer-session", { cache: "no-store" })
+      .then((response) => response.json())
+      .then(
+        (payload: {
+          authenticated?: boolean;
+          user?: { name: string; email: string; phone?: string | null };
+        }) => {
+          if (payload.authenticated && payload.user) {
+            setCustomer((current) => ({
+              ...current,
+              name: payload.user?.name || current.name,
+              email: payload.user?.email || current.email,
+              phone: payload.user?.phone || current.phone,
+            }));
+            void fetch("/api/customer-account", { cache: "no-store" })
+              .then((response) => response.json())
+              .then(
+                (account: {
+                  addresses?: {
+                    cep: string;
+                    street: string;
+                    number: string;
+                    complement?: string | null;
+                    district: string;
+                    city: string;
+                    state: string;
+                    isDefault: boolean;
+                  }[];
+                }) => {
+                  const address =
+                    account.addresses?.find((item) => item.isDefault) || account.addresses?.[0];
+                  if (address)
+                    setDelivery((current) => ({
+                      ...current,
+                      cep: address.cep,
+                      street: address.street,
+                      number: address.number,
+                      complement: address.complement || "",
+                      district: address.district,
+                      city: address.city,
+                      state: address.state,
+                    }));
+                },
+              )
+              .catch(() => undefined);
+          }
+        },
+      )
+      .catch(() => undefined);
+  }, []);
 
   const summary = useMemo(
     () =>
@@ -89,8 +159,9 @@ function CheckoutPage() {
         couponCode,
         coupons,
         freeShippingMin: institutional.freeShippingMin,
+        fulfillmentType: delivery.fulfillmentType,
       }),
-    [couponCode, coupons, institutional.freeShippingMin, items],
+    [couponCode, coupons, delivery.fulfillmentType, institutional.freeShippingMin, items],
   );
 
   const updateCustomer = (field: keyof Customer, value: string) =>
@@ -109,6 +180,17 @@ function CheckoutPage() {
 
   const continueFromDelivery = () => {
     setError(null);
+    if (!delivery.scheduledDate) return setError("Escolha uma data disponível.");
+    const selected = availableDays.find((day) => day.day === delivery.scheduledDate);
+    if (
+      !selected ||
+      !(delivery.fulfillmentType === "delivery" ? selected.deliveryEnabled : selected.pickupEnabled)
+    )
+      return setError("Essa opção não está disponível na data escolhida.");
+    if (delivery.fulfillmentType === "pickup") {
+      setStep(3);
+      return;
+    }
     if (onlyDigits(delivery.cep).length !== 8) return setError("Informe um CEP válido.");
     if (delivery.street.trim().length < 3 || !delivery.number.trim()) {
       return setError("Preencha rua e número da entrega.");
@@ -130,8 +212,14 @@ function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           attemptId: attemptId.current,
-          items: items.map((item) => ({ productId: item.productId, qty: item.qty })),
+          items: items.map((item) => ({
+            productId: item.productId,
+            qty: item.qty,
+            selections: item.selections?.map(({ productId, qty }) => ({ productId, qty })),
+          })),
           coupon: couponCode,
+          subscriptionInterval:
+            items.find((item) => item.subscriptionInterval)?.subscriptionInterval || null,
           customer,
           delivery,
         }),
@@ -283,88 +371,158 @@ function CheckoutPage() {
 
             {step === 2 && (
               <div>
-                <h2 className="font-display text-2xl">Onde entregamos?</h2>
+                <h2 className="font-display text-2xl">Como você quer receber?</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  A entrega refrigerada preserva qualidade, sabor e segurança.
+                  Entregamos em toda Manaus por R$ 15 ou você pode retirar gratuitamente no nosso
+                  local.
                 </p>
-                <div className="mt-6 grid gap-5 sm:grid-cols-6">
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="cep">CEP</Label>
-                    <Input
-                      id="cep"
-                      inputMode="numeric"
-                      autoComplete="postal-code"
-                      value={delivery.cep}
-                      onChange={(event) => updateDelivery("cep", maskCep(event.target.value))}
-                      placeholder="69000-000"
-                    />
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => updateDelivery("fulfillmentType", "delivery")}
+                    className={`rounded-2xl border p-4 text-left ${delivery.fulfillmentType === "delivery" ? "border-primary bg-orange-soft" : "bg-background"}`}
+                  >
+                    <Truck className="mb-2 h-5 w-5 text-primary-dark" />
+                    <strong>Entrega em Manaus</strong>
+                    <p className="mt-1 text-xs text-muted-foreground">Taxa única de R$ 15</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateDelivery("fulfillmentType", "pickup")}
+                    className={`rounded-2xl border p-4 text-left ${delivery.fulfillmentType === "pickup" ? "border-primary bg-orange-soft" : "bg-background"}`}
+                  >
+                    <Check className="mb-2 h-5 w-5 text-secondary" />
+                    <strong>Retirada no local</strong>
+                    <p className="mt-1 text-xs text-muted-foreground">Sem taxa de entrega</p>
+                  </button>
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="scheduledDate">Data</Label>
+                    <select
+                      id="scheduledDate"
+                      className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                      value={delivery.scheduledDate}
+                      onChange={(event) => updateDelivery("scheduledDate", event.target.value)}
+                    >
+                      <option value="">Selecione uma data</option>
+                      {availableDays
+                        .filter((day) =>
+                          delivery.fulfillmentType === "delivery"
+                            ? day.deliveryEnabled
+                            : day.pickupEnabled,
+                        )
+                        .map((day) => (
+                          <option key={day.day} value={day.day}>
+                            {new Date(`${day.day}T12:00:00`).toLocaleDateString("pt-BR", {
+                              weekday: "short",
+                              day: "2-digit",
+                              month: "2-digit",
+                            })}{" "}
+                            · {day.available} vagas
+                          </option>
+                        ))}
+                    </select>
                   </div>
-                  <div className="sm:col-span-4">
-                    <Label htmlFor="street">Rua</Label>
-                    <Input
-                      id="street"
-                      autoComplete="address-line1"
-                      value={delivery.street}
-                      onChange={(event) => updateDelivery("street", event.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="number">Número</Label>
-                    <Input
-                      id="number"
-                      value={delivery.number}
-                      onChange={(event) => updateDelivery("number", event.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-4">
-                    <Label htmlFor="complement">Complemento</Label>
-                    <Input
-                      id="complement"
-                      autoComplete="address-line2"
-                      value={delivery.complement}
-                      onChange={(event) => updateDelivery("complement", event.target.value)}
-                      placeholder="Apto, bloco ou referência"
-                    />
-                  </div>
-                  <div className="sm:col-span-3">
-                    <Label htmlFor="district">Bairro</Label>
-                    <Input
-                      id="district"
-                      value={delivery.district}
-                      onChange={(event) => updateDelivery("district", event.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="city">Cidade</Label>
-                    <Input
-                      id="city"
-                      autoComplete="address-level2"
-                      value={delivery.city}
-                      onChange={(event) => updateDelivery("city", event.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-1">
-                    <Label htmlFor="state">UF</Label>
-                    <Input
-                      id="state"
-                      maxLength={2}
-                      autoComplete="address-level1"
-                      value={delivery.state}
+                  <div>
+                    <Label htmlFor="deliveryWindow">Período</Label>
+                    <select
+                      id="deliveryWindow"
+                      className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                      value={delivery.deliveryWindow}
                       onChange={(event) =>
-                        updateDelivery("state", event.target.value.toUpperCase())
+                        updateDelivery(
+                          "deliveryWindow",
+                          event.target.value as Delivery["deliveryWindow"],
+                        )
                       }
-                    />
-                  </div>
-                  <div className="sm:col-span-6">
-                    <Label htmlFor="notes">Observações</Label>
-                    <Input
-                      id="notes"
-                      value={delivery.notes}
-                      onChange={(event) => updateDelivery("notes", event.target.value)}
-                      placeholder="Instruções para o entregador (opcional)"
-                    />
+                    >
+                      <option value="manha">Manhã</option>
+                      <option value="tarde">Tarde</option>
+                      <option value="noite">Noite</option>
+                    </select>
                   </div>
                 </div>
+                {delivery.fulfillmentType === "delivery" && (
+                  <div className="mt-6 grid gap-5 sm:grid-cols-6">
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="cep">CEP</Label>
+                      <Input
+                        id="cep"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
+                        value={delivery.cep}
+                        onChange={(event) => updateDelivery("cep", maskCep(event.target.value))}
+                        placeholder="69000-000"
+                      />
+                    </div>
+                    <div className="sm:col-span-4">
+                      <Label htmlFor="street">Rua</Label>
+                      <Input
+                        id="street"
+                        autoComplete="address-line1"
+                        value={delivery.street}
+                        onChange={(event) => updateDelivery("street", event.target.value)}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="number">Número</Label>
+                      <Input
+                        id="number"
+                        value={delivery.number}
+                        onChange={(event) => updateDelivery("number", event.target.value)}
+                      />
+                    </div>
+                    <div className="sm:col-span-4">
+                      <Label htmlFor="complement">Complemento</Label>
+                      <Input
+                        id="complement"
+                        autoComplete="address-line2"
+                        value={delivery.complement}
+                        onChange={(event) => updateDelivery("complement", event.target.value)}
+                        placeholder="Apto, bloco ou referência"
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <Label htmlFor="district">Bairro</Label>
+                      <Input
+                        id="district"
+                        value={delivery.district}
+                        onChange={(event) => updateDelivery("district", event.target.value)}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <Input
+                        id="city"
+                        autoComplete="address-level2"
+                        value={delivery.city}
+                        onChange={(event) => updateDelivery("city", event.target.value)}
+                      />
+                    </div>
+                    <div className="sm:col-span-1">
+                      <Label htmlFor="state">UF</Label>
+                      <Input
+                        id="state"
+                        maxLength={2}
+                        autoComplete="address-level1"
+                        value={delivery.state}
+                        onChange={(event) =>
+                          updateDelivery("state", event.target.value.toUpperCase())
+                        }
+                      />
+                    </div>
+                    <div className="sm:col-span-6">
+                      <Label htmlFor="notes">Observações</Label>
+                      <Input
+                        id="notes"
+                        value={delivery.notes}
+                        onChange={(event) => updateDelivery("notes", event.target.value)}
+                        placeholder="Instruções para o entregador (opcional)"
+                      />
+                    </div>
+                  </div>
+                )}
                 {error && (
                   <p className="mt-5 text-sm font-medium text-destructive" role="alert">
                     {error}
@@ -474,7 +632,9 @@ function CheckoutPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Entrega</span>
-              <span>{summary.shipping === 0 ? "Grátis" : brl(summary.shipping)}</span>
+              <span>
+                {delivery.fulfillmentType === "pickup" ? "Retirada grátis" : brl(summary.shipping)}
+              </span>
             </div>
             {summary.discount > 0 && (
               <div className="flex justify-between text-secondary">
@@ -488,8 +648,8 @@ function CheckoutPage() {
             </div>
           </div>
           <div className="mt-5 flex items-start gap-2 rounded-2xl bg-orange-soft p-3 text-xs text-charcoal/75">
-            <Truck className="mt-0.5 h-4 w-4 shrink-0 text-primary-dark" /> Entrega refrigerada.
-            Frete grátis a partir de {brl(institutional.freeShippingMin)}.
+            <Truck className="mt-0.5 h-4 w-4 shrink-0 text-primary-dark" /> Entrega refrigerada em
+            toda Manaus por R$ 15 ou retirada gratuita.
           </div>
         </aside>
       </div>

@@ -12,12 +12,20 @@ export type CheckoutCatalogLine = {
   image: string;
   qty: number;
   unitPrice: number;
+  selections?: { productId: string; name: string; qty: number }[];
+};
+type CatalogItem = Omit<CheckoutCatalogLine, "productId" | "qty" | "selections"> & {
+  stock: number;
+  enforceStock: boolean;
+  allowedProductIds?: string[];
+  mealCount?: number;
+  subscriptionEligible: boolean;
 };
 
 export async function buildVerifiedCheckout(payload: CheckoutRequest) {
   const { data } = await readAdminContent();
   const emporium = await listEmporiumProducts();
-  const catalog = new Map([
+  const catalog = new Map<string, CatalogItem>([
     ...data.products
       .filter((product) => product.active && priceOf(product) > 0)
       .map(
@@ -30,6 +38,10 @@ export async function buildVerifiedCheckout(payload: CheckoutRequest) {
               image: product.image,
               unitPrice: priceOf(product),
               stock: product.stock,
+              enforceStock: false,
+              allowedProductIds: undefined as string[] | undefined,
+              mealCount: undefined as number | undefined,
+              subscriptionEligible: false,
             },
           ] as const,
       ),
@@ -45,6 +57,10 @@ export async function buildVerifiedCheckout(payload: CheckoutRequest) {
               image: kit.image,
               unitPrice: kit.price,
               stock: 20,
+              enforceStock: false,
+              allowedProductIds: kit.items.map((entry) => entry.productId),
+              mealCount: kit.mealCount || kit.items.reduce((sum, entry) => sum + entry.qty, 0),
+              subscriptionEligible: Boolean(kit.subscriptionEligible),
             },
           ] as const,
       ),
@@ -58,6 +74,10 @@ export async function buildVerifiedCheckout(payload: CheckoutRequest) {
             image: product.image,
             unitPrice: product.priceCents / 100,
             stock: product.stock,
+            enforceStock: true,
+            allowedProductIds: undefined as string[] | undefined,
+            mealCount: undefined as number | undefined,
+            subscriptionEligible: false,
           },
         ] as const,
     ),
@@ -67,12 +87,37 @@ export async function buildVerifiedCheckout(payload: CheckoutRequest) {
     merged.set(item.productId, (merged.get(item.productId) ?? 0) + item.qty);
   }
 
+  if (payload.subscriptionInterval) {
+    const selected = payload.items.length === 1 ? catalog.get(payload.items[0].productId) : null;
+    if (!selected?.subscriptionEligible || payload.items[0].qty !== 1)
+      throw new Error("Assinaturas devem conter um único kit elegível por checkout.");
+  }
+
   const lines: CheckoutCatalogLine[] = [];
   for (const [productId, qty] of merged) {
     const item = catalog.get(productId);
     if (!item) throw new Error(`O item ${productId} não está disponível.`);
-    if (qty > item.stock) throw new Error(`Estoque insuficiente para ${item.name}.`);
-    lines.push({ productId, qty, ...item });
+    if (item.enforceStock && qty > item.stock)
+      throw new Error(`Estoque insuficiente para ${item.name}.`);
+    const requested = payload.items.find((entry) => entry.productId === productId)?.selections;
+    let selections: CheckoutCatalogLine["selections"];
+    if (requested?.length) {
+      if (!item.allowedProductIds?.length)
+        throw new Error(`${item.name} não aceita personalização.`);
+      const selectedTotal = requested.reduce((sum, entry) => sum + entry.qty, 0);
+      if (selectedTotal !== item.mealCount)
+        throw new Error(`Escolha exatamente ${item.mealCount} refeições para ${item.name}.`);
+      selections = requested.map((entry) => {
+        if (!item.allowedProductIds?.includes(entry.productId))
+          throw new Error("Uma das refeições não pertence a este kit.");
+        const product = data.products.find(
+          (candidate) => candidate.id === entry.productId && candidate.active,
+        );
+        if (!product) throw new Error("Uma das refeições escolhidas não está disponível.");
+        return { productId: entry.productId, name: product.name, qty: entry.qty };
+      });
+    }
+    lines.push({ productId, qty, ...item, selections });
   }
 
   const summary = calculateOrderSummary({
@@ -80,6 +125,7 @@ export async function buildVerifiedCheckout(payload: CheckoutRequest) {
     couponCode: payload.coupon,
     coupons: data.coupons,
     freeShippingMin: data.institutional.freeShippingMin,
+    fulfillmentType: payload.delivery.fulfillmentType,
   });
 
   if (payload.coupon && summary.error) throw new Error(summary.error);

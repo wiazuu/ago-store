@@ -34,11 +34,10 @@ export function Header() {
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!search.trim() || categories.length === 0) return;
+    if (!search.trim()) return;
     navigate({
-      to: "/categoria/$slug",
-      params: { slug: categories[0].slug },
-      search: { q: search.trim() } as never,
+      to: "/cardapio",
+      search: { q: search.trim() },
     });
     setSearch("");
     setMobileOpen(false);
@@ -48,9 +47,13 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur-xl">
       {home.promoBar.active && home.promoBar.text.trim() && (
         <div className="bg-secondary px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-cream sm:text-xs">
-          {home.promoBar.link ? <Link to={home.promoBar.link as never} className="hover:text-primary">
-            {home.promoBar.text}
-          </Link> : <span>{home.promoBar.text}</span>}
+          {home.promoBar.link ? (
+            <Link to={home.promoBar.link as never} className="hover:text-primary">
+              {home.promoBar.text}
+            </Link>
+          ) : (
+            <span>{home.promoBar.text}</span>
+          )}
         </div>
       )}
 
@@ -111,7 +114,19 @@ export function Header() {
         aria-label="Categorias rápidas"
       >
         <div className="scrollbar-none flex gap-2 overflow-x-auto px-4 py-2.5">
-          <Link to="/emporio" className="shrink-0 rounded-full border border-primary bg-primary px-3.5 py-2 text-xs font-extrabold text-primary-foreground">Empório</Link>
+          <Link
+            to="/emporio"
+            className="shrink-0 rounded-full border border-primary bg-primary px-3.5 py-2 text-xs font-extrabold text-primary-foreground"
+          >
+            Empório
+          </Link>
+          <Link
+            to="/cardapio"
+            search={{}}
+            className="shrink-0 rounded-full border bg-background px-3.5 py-2 text-xs font-extrabold"
+          >
+            Cardápio
+          </Link>
           {categories.slice(0, 5).map((category, index) => (
             <Link
               key={category.id}
@@ -131,7 +146,12 @@ export function Header() {
 
       <nav className="hidden border-t border-border/60 lg:block" aria-label="Cardápio">
         <div className="container-page scrollbar-none flex items-center gap-7 overflow-x-auto py-3 text-sm font-semibold">
-          <Link to="/emporio" className="shrink-0 font-extrabold text-primary-dark">Empório</Link>
+          <Link to="/emporio" className="shrink-0 font-extrabold text-primary-dark">
+            Empório
+          </Link>
+          <Link to="/cardapio" search={{}} className="shrink-0 font-extrabold text-secondary">
+            Cardápio completo
+          </Link>
           {categories.slice(0, 7).map((category) => (
             <Link
               key={category.id}
@@ -223,7 +243,16 @@ export function Header() {
 
                 <p className="section-kicker mb-2">Mais opções</p>
                 <ul className="divide-y divide-border/70 rounded-2xl border bg-card px-2">
-                  <li><Link to="/emporio" onClick={() => setMobileOpen(false)} className="flex min-h-12 items-center justify-between rounded-xl px-3 py-3 text-sm font-bold text-primary-dark hover:bg-muted">Empório<ArrowRight className="h-4 w-4" /></Link></li>
+                  <li>
+                    <Link
+                      to="/emporio"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex min-h-12 items-center justify-between rounded-xl px-3 py-3 text-sm font-bold text-primary-dark hover:bg-muted"
+                    >
+                      Empório
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </li>
                   {categories.slice(3).map((category) => (
                     <li key={category.id}>
                       <Link

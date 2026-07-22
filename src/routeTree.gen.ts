@@ -9,23 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as MinhaContaRouteImport } from './routes/minha-conta'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
+import { Route as EntregasRouteImport } from './routes/entregas'
 import { Route as EmporioRouteImport } from './routes/emporio'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CentralAgons92xRouteImport } from './routes/central-agons-92x'
+import { Route as CardapioRouteImport } from './routes/cardapio'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CentralAgons92xIndexRouteImport } from './routes/central-agons-92x.index'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 import { Route as PedidoConfirmadoRouteImport } from './routes/pedido.confirmado'
 import { Route as ObjetivoSlugRouteImport } from './routes/objetivo.$slug'
+import { Route as KitSlugRouteImport } from './routes/kit.$slug'
+import { Route as CentralAgons92xRelatoriosRouteImport } from './routes/central-agons-92x.relatorios'
 import { Route as CentralAgons92xRedefinirSenhaRouteImport } from './routes/central-agons-92x.redefinir-senha'
 import { Route as CentralAgons92xProdutosRouteImport } from './routes/central-agons-92x.produtos'
+import { Route as CentralAgons92xProducaoRouteImport } from './routes/central-agons-92x.producao'
 import { Route as CentralAgons92xPedidosRouteImport } from './routes/central-agons-92x.pedidos'
 import { Route as CentralAgons92xObjetivosRouteImport } from './routes/central-agons-92x.objetivos'
+import { Route as CentralAgons92xLogisticaRouteImport } from './routes/central-agons-92x.logistica'
 import { Route as CentralAgons92xKitsRouteImport } from './routes/central-agons-92x.kits'
 import { Route as CentralAgons92xHomeRouteImport } from './routes/central-agons-92x.home'
 import { Route as CentralAgons92xEsqueciSenhaRouteImport } from './routes/central-agons-92x.esqueci-senha'
@@ -33,7 +41,9 @@ import { Route as CentralAgons92xEntrarRouteImport } from './routes/central-agon
 import { Route as CentralAgons92xEmporioRouteImport } from './routes/central-agons-92x.emporio'
 import { Route as CentralAgons92xCuponsRouteImport } from './routes/central-agons-92x.cupons'
 import { Route as CentralAgons92xConteudoRouteImport } from './routes/central-agons-92x.conteudo'
+import { Route as CentralAgons92xClientesRouteImport } from './routes/central-agons-92x.clientes'
 import { Route as CentralAgons92xCategoriasRouteImport } from './routes/central-agons-92x.categorias'
+import { Route as CentralAgons92xCalendarioRouteImport } from './routes/central-agons-92x.calendario'
 import { Route as CentralAgons92xBannersRouteImport } from './routes/central-agons-92x.banners'
 import { Route as CentralAgons92xAparenciaRouteImport } from './routes/central-agons-92x.aparencia'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
@@ -43,19 +53,32 @@ import { Route as ApiOrdersRouteImport } from './routes/api.orders'
 import { Route as ApiMediaRouteImport } from './routes/api.media'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiEmporioRouteImport } from './routes/api.emporio'
+import { Route as ApiDeliveryCalendarRouteImport } from './routes/api.delivery-calendar'
 import { Route as ApiCustomerSessionRouteImport } from './routes/api.customer-session'
 import { Route as ApiCustomerRegisterRouteImport } from './routes/api.customer-register'
 import { Route as ApiCustomerPasswordResetRouteImport } from './routes/api.customer-password-reset'
+import { Route as ApiCustomerAccountRouteImport } from './routes/api.customer-account'
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiAdminStateRouteImport } from './routes/api.admin-state'
 import { Route as ApiAdminSessionRouteImport } from './routes/api.admin-session'
+import { Route as ApiAdminOperationsRouteImport } from './routes/api.admin-operations'
 import { Route as ApiMediaIdRouteImport } from './routes/api.media.$id'
 import { Route as ApiEmporioIdRouteImport } from './routes/api.emporio.$id'
 import { Route as ApiCheckoutSessionIdRouteImport } from './routes/api.checkout-session.$id'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MinhaContaRoute = MinhaContaRouteImport.update({
@@ -73,6 +96,11 @@ const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
   path: '/esqueci-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntregasRoute = EntregasRouteImport.update({
+  id: '/entregas',
+  path: '/entregas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmporioRoute = EmporioRouteImport.update({
   id: '/emporio',
   path: '/emporio',
@@ -86,6 +114,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const CentralAgons92xRoute = CentralAgons92xRouteImport.update({
   id: '/central-agons-92x',
   path: '/central-agons-92x',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CardapioRoute = CardapioRouteImport.update({
+  id: '/cardapio',
+  path: '/cardapio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastroRoute = CadastroRouteImport.update({
@@ -118,6 +151,17 @@ const ObjetivoSlugRoute = ObjetivoSlugRouteImport.update({
   path: '/objetivo/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KitSlugRoute = KitSlugRouteImport.update({
+  id: '/kit/$slug',
+  path: '/kit/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CentralAgons92xRelatoriosRoute =
+  CentralAgons92xRelatoriosRouteImport.update({
+    id: '/relatorios',
+    path: '/relatorios',
+    getParentRoute: () => CentralAgons92xRoute,
+  } as any)
 const CentralAgons92xRedefinirSenhaRoute =
   CentralAgons92xRedefinirSenhaRouteImport.update({
     id: '/redefinir-senha',
@@ -129,6 +173,11 @@ const CentralAgons92xProdutosRoute = CentralAgons92xProdutosRouteImport.update({
   path: '/produtos',
   getParentRoute: () => CentralAgons92xRoute,
 } as any)
+const CentralAgons92xProducaoRoute = CentralAgons92xProducaoRouteImport.update({
+  id: '/producao',
+  path: '/producao',
+  getParentRoute: () => CentralAgons92xRoute,
+} as any)
 const CentralAgons92xPedidosRoute = CentralAgons92xPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
@@ -138,6 +187,12 @@ const CentralAgons92xObjetivosRoute =
   CentralAgons92xObjetivosRouteImport.update({
     id: '/objetivos',
     path: '/objetivos',
+    getParentRoute: () => CentralAgons92xRoute,
+  } as any)
+const CentralAgons92xLogisticaRoute =
+  CentralAgons92xLogisticaRouteImport.update({
+    id: '/logistica',
+    path: '/logistica',
     getParentRoute: () => CentralAgons92xRoute,
   } as any)
 const CentralAgons92xKitsRoute = CentralAgons92xKitsRouteImport.update({
@@ -176,10 +231,21 @@ const CentralAgons92xConteudoRoute = CentralAgons92xConteudoRouteImport.update({
   path: '/conteudo',
   getParentRoute: () => CentralAgons92xRoute,
 } as any)
+const CentralAgons92xClientesRoute = CentralAgons92xClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => CentralAgons92xRoute,
+} as any)
 const CentralAgons92xCategoriasRoute =
   CentralAgons92xCategoriasRouteImport.update({
     id: '/categorias',
     path: '/categorias',
+    getParentRoute: () => CentralAgons92xRoute,
+  } as any)
+const CentralAgons92xCalendarioRoute =
+  CentralAgons92xCalendarioRouteImport.update({
+    id: '/calendario',
+    path: '/calendario',
     getParentRoute: () => CentralAgons92xRoute,
   } as any)
 const CentralAgons92xBannersRoute = CentralAgons92xBannersRouteImport.update({
@@ -228,6 +294,11 @@ const ApiEmporioRoute = ApiEmporioRouteImport.update({
   path: '/api/emporio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDeliveryCalendarRoute = ApiDeliveryCalendarRouteImport.update({
+  id: '/api/delivery-calendar',
+  path: '/api/delivery-calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCustomerSessionRoute = ApiCustomerSessionRouteImport.update({
   id: '/api/customer-session',
   path: '/api/customer-session',
@@ -244,6 +315,11 @@ const ApiCustomerPasswordResetRoute =
     path: '/api/customer-password-reset',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiCustomerAccountRoute = ApiCustomerAccountRouteImport.update({
+  id: '/api/customer-account',
+  path: '/api/customer-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
   id: '/api/checkout',
   path: '/api/checkout',
@@ -257,6 +333,11 @@ const ApiAdminStateRoute = ApiAdminStateRouteImport.update({
 const ApiAdminSessionRoute = ApiAdminSessionRouteImport.update({
   id: '/api/admin-session',
   path: '/api/admin-session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminOperationsRoute = ApiAdminOperationsRouteImport.update({
+  id: '/api/admin-operations',
+  path: '/api/admin-operations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMediaIdRoute = ApiMediaIdRouteImport.update({
@@ -278,19 +359,26 @@ const ApiCheckoutSessionIdRoute = ApiCheckoutSessionIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
+  '/cardapio': typeof CardapioRoute
   '/central-agons-92x': typeof CentralAgons92xRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/emporio': typeof EmporioRoute
+  '/entregas': typeof EntregasRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/login': typeof LoginRoute
   '/minha-conta': typeof MinhaContaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
+  '/api/admin-operations': typeof ApiAdminOperationsRoute
   '/api/admin-session': typeof ApiAdminSessionRoute
   '/api/admin-state': typeof ApiAdminStateRoute
   '/api/checkout': typeof ApiCheckoutRoute
+  '/api/customer-account': typeof ApiCustomerAccountRoute
   '/api/customer-password-reset': typeof ApiCustomerPasswordResetRoute
   '/api/customer-register': typeof ApiCustomerRegisterRoute
   '/api/customer-session': typeof ApiCustomerSessionRoute
+  '/api/delivery-calendar': typeof ApiDeliveryCalendarRoute
   '/api/emporio': typeof ApiEmporioRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/media': typeof ApiMediaRouteWithChildren
@@ -300,7 +388,9 @@ export interface FileRoutesByFullPath {
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/central-agons-92x/aparencia': typeof CentralAgons92xAparenciaRoute
   '/central-agons-92x/banners': typeof CentralAgons92xBannersRoute
+  '/central-agons-92x/calendario': typeof CentralAgons92xCalendarioRoute
   '/central-agons-92x/categorias': typeof CentralAgons92xCategoriasRoute
+  '/central-agons-92x/clientes': typeof CentralAgons92xClientesRoute
   '/central-agons-92x/conteudo': typeof CentralAgons92xConteudoRoute
   '/central-agons-92x/cupons': typeof CentralAgons92xCuponsRoute
   '/central-agons-92x/emporio': typeof CentralAgons92xEmporioRoute
@@ -308,10 +398,14 @@ export interface FileRoutesByFullPath {
   '/central-agons-92x/esqueci-senha': typeof CentralAgons92xEsqueciSenhaRoute
   '/central-agons-92x/home': typeof CentralAgons92xHomeRoute
   '/central-agons-92x/kits': typeof CentralAgons92xKitsRoute
+  '/central-agons-92x/logistica': typeof CentralAgons92xLogisticaRoute
   '/central-agons-92x/objetivos': typeof CentralAgons92xObjetivosRoute
   '/central-agons-92x/pedidos': typeof CentralAgons92xPedidosRoute
+  '/central-agons-92x/producao': typeof CentralAgons92xProducaoRoute
   '/central-agons-92x/produtos': typeof CentralAgons92xProdutosRoute
   '/central-agons-92x/redefinir-senha': typeof CentralAgons92xRedefinirSenhaRoute
+  '/central-agons-92x/relatorios': typeof CentralAgons92xRelatoriosRoute
+  '/kit/$slug': typeof KitSlugRoute
   '/objetivo/$slug': typeof ObjetivoSlugRoute
   '/pedido/confirmado': typeof PedidoConfirmadoRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -323,18 +417,25 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
+  '/cardapio': typeof CardapioRoute
   '/checkout': typeof CheckoutRoute
   '/emporio': typeof EmporioRoute
+  '/entregas': typeof EntregasRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/login': typeof LoginRoute
   '/minha-conta': typeof MinhaContaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
+  '/api/admin-operations': typeof ApiAdminOperationsRoute
   '/api/admin-session': typeof ApiAdminSessionRoute
   '/api/admin-state': typeof ApiAdminStateRoute
   '/api/checkout': typeof ApiCheckoutRoute
+  '/api/customer-account': typeof ApiCustomerAccountRoute
   '/api/customer-password-reset': typeof ApiCustomerPasswordResetRoute
   '/api/customer-register': typeof ApiCustomerRegisterRoute
   '/api/customer-session': typeof ApiCustomerSessionRoute
+  '/api/delivery-calendar': typeof ApiDeliveryCalendarRoute
   '/api/emporio': typeof ApiEmporioRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/media': typeof ApiMediaRouteWithChildren
@@ -344,7 +445,9 @@ export interface FileRoutesByTo {
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/central-agons-92x/aparencia': typeof CentralAgons92xAparenciaRoute
   '/central-agons-92x/banners': typeof CentralAgons92xBannersRoute
+  '/central-agons-92x/calendario': typeof CentralAgons92xCalendarioRoute
   '/central-agons-92x/categorias': typeof CentralAgons92xCategoriasRoute
+  '/central-agons-92x/clientes': typeof CentralAgons92xClientesRoute
   '/central-agons-92x/conteudo': typeof CentralAgons92xConteudoRoute
   '/central-agons-92x/cupons': typeof CentralAgons92xCuponsRoute
   '/central-agons-92x/emporio': typeof CentralAgons92xEmporioRoute
@@ -352,10 +455,14 @@ export interface FileRoutesByTo {
   '/central-agons-92x/esqueci-senha': typeof CentralAgons92xEsqueciSenhaRoute
   '/central-agons-92x/home': typeof CentralAgons92xHomeRoute
   '/central-agons-92x/kits': typeof CentralAgons92xKitsRoute
+  '/central-agons-92x/logistica': typeof CentralAgons92xLogisticaRoute
   '/central-agons-92x/objetivos': typeof CentralAgons92xObjetivosRoute
   '/central-agons-92x/pedidos': typeof CentralAgons92xPedidosRoute
+  '/central-agons-92x/producao': typeof CentralAgons92xProducaoRoute
   '/central-agons-92x/produtos': typeof CentralAgons92xProdutosRoute
   '/central-agons-92x/redefinir-senha': typeof CentralAgons92xRedefinirSenhaRoute
+  '/central-agons-92x/relatorios': typeof CentralAgons92xRelatoriosRoute
+  '/kit/$slug': typeof KitSlugRoute
   '/objetivo/$slug': typeof ObjetivoSlugRoute
   '/pedido/confirmado': typeof PedidoConfirmadoRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -368,19 +475,26 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
+  '/cardapio': typeof CardapioRoute
   '/central-agons-92x': typeof CentralAgons92xRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/emporio': typeof EmporioRoute
+  '/entregas': typeof EntregasRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
   '/login': typeof LoginRoute
   '/minha-conta': typeof MinhaContaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
+  '/api/admin-operations': typeof ApiAdminOperationsRoute
   '/api/admin-session': typeof ApiAdminSessionRoute
   '/api/admin-state': typeof ApiAdminStateRoute
   '/api/checkout': typeof ApiCheckoutRoute
+  '/api/customer-account': typeof ApiCustomerAccountRoute
   '/api/customer-password-reset': typeof ApiCustomerPasswordResetRoute
   '/api/customer-register': typeof ApiCustomerRegisterRoute
   '/api/customer-session': typeof ApiCustomerSessionRoute
+  '/api/delivery-calendar': typeof ApiDeliveryCalendarRoute
   '/api/emporio': typeof ApiEmporioRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/media': typeof ApiMediaRouteWithChildren
@@ -390,7 +504,9 @@ export interface FileRoutesById {
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/central-agons-92x/aparencia': typeof CentralAgons92xAparenciaRoute
   '/central-agons-92x/banners': typeof CentralAgons92xBannersRoute
+  '/central-agons-92x/calendario': typeof CentralAgons92xCalendarioRoute
   '/central-agons-92x/categorias': typeof CentralAgons92xCategoriasRoute
+  '/central-agons-92x/clientes': typeof CentralAgons92xClientesRoute
   '/central-agons-92x/conteudo': typeof CentralAgons92xConteudoRoute
   '/central-agons-92x/cupons': typeof CentralAgons92xCuponsRoute
   '/central-agons-92x/emporio': typeof CentralAgons92xEmporioRoute
@@ -398,10 +514,14 @@ export interface FileRoutesById {
   '/central-agons-92x/esqueci-senha': typeof CentralAgons92xEsqueciSenhaRoute
   '/central-agons-92x/home': typeof CentralAgons92xHomeRoute
   '/central-agons-92x/kits': typeof CentralAgons92xKitsRoute
+  '/central-agons-92x/logistica': typeof CentralAgons92xLogisticaRoute
   '/central-agons-92x/objetivos': typeof CentralAgons92xObjetivosRoute
   '/central-agons-92x/pedidos': typeof CentralAgons92xPedidosRoute
+  '/central-agons-92x/producao': typeof CentralAgons92xProducaoRoute
   '/central-agons-92x/produtos': typeof CentralAgons92xProdutosRoute
   '/central-agons-92x/redefinir-senha': typeof CentralAgons92xRedefinirSenhaRoute
+  '/central-agons-92x/relatorios': typeof CentralAgons92xRelatoriosRoute
+  '/kit/$slug': typeof KitSlugRoute
   '/objetivo/$slug': typeof ObjetivoSlugRoute
   '/pedido/confirmado': typeof PedidoConfirmadoRoute
   '/produto/$slug': typeof ProdutoSlugRoute
@@ -415,19 +535,26 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cadastro'
+    | '/cardapio'
     | '/central-agons-92x'
     | '/checkout'
     | '/emporio'
+    | '/entregas'
     | '/esqueci-senha'
     | '/login'
     | '/minha-conta'
+    | '/privacidade'
     | '/redefinir-senha'
+    | '/termos'
+    | '/api/admin-operations'
     | '/api/admin-session'
     | '/api/admin-state'
     | '/api/checkout'
+    | '/api/customer-account'
     | '/api/customer-password-reset'
     | '/api/customer-register'
     | '/api/customer-session'
+    | '/api/delivery-calendar'
     | '/api/emporio'
     | '/api/health'
     | '/api/media'
@@ -437,7 +564,9 @@ export interface FileRouteTypes {
     | '/categoria/$slug'
     | '/central-agons-92x/aparencia'
     | '/central-agons-92x/banners'
+    | '/central-agons-92x/calendario'
     | '/central-agons-92x/categorias'
+    | '/central-agons-92x/clientes'
     | '/central-agons-92x/conteudo'
     | '/central-agons-92x/cupons'
     | '/central-agons-92x/emporio'
@@ -445,10 +574,14 @@ export interface FileRouteTypes {
     | '/central-agons-92x/esqueci-senha'
     | '/central-agons-92x/home'
     | '/central-agons-92x/kits'
+    | '/central-agons-92x/logistica'
     | '/central-agons-92x/objetivos'
     | '/central-agons-92x/pedidos'
+    | '/central-agons-92x/producao'
     | '/central-agons-92x/produtos'
     | '/central-agons-92x/redefinir-senha'
+    | '/central-agons-92x/relatorios'
+    | '/kit/$slug'
     | '/objetivo/$slug'
     | '/pedido/confirmado'
     | '/produto/$slug'
@@ -460,18 +593,25 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cadastro'
+    | '/cardapio'
     | '/checkout'
     | '/emporio'
+    | '/entregas'
     | '/esqueci-senha'
     | '/login'
     | '/minha-conta'
+    | '/privacidade'
     | '/redefinir-senha'
+    | '/termos'
+    | '/api/admin-operations'
     | '/api/admin-session'
     | '/api/admin-state'
     | '/api/checkout'
+    | '/api/customer-account'
     | '/api/customer-password-reset'
     | '/api/customer-register'
     | '/api/customer-session'
+    | '/api/delivery-calendar'
     | '/api/emporio'
     | '/api/health'
     | '/api/media'
@@ -481,7 +621,9 @@ export interface FileRouteTypes {
     | '/categoria/$slug'
     | '/central-agons-92x/aparencia'
     | '/central-agons-92x/banners'
+    | '/central-agons-92x/calendario'
     | '/central-agons-92x/categorias'
+    | '/central-agons-92x/clientes'
     | '/central-agons-92x/conteudo'
     | '/central-agons-92x/cupons'
     | '/central-agons-92x/emporio'
@@ -489,10 +631,14 @@ export interface FileRouteTypes {
     | '/central-agons-92x/esqueci-senha'
     | '/central-agons-92x/home'
     | '/central-agons-92x/kits'
+    | '/central-agons-92x/logistica'
     | '/central-agons-92x/objetivos'
     | '/central-agons-92x/pedidos'
+    | '/central-agons-92x/producao'
     | '/central-agons-92x/produtos'
     | '/central-agons-92x/redefinir-senha'
+    | '/central-agons-92x/relatorios'
+    | '/kit/$slug'
     | '/objetivo/$slug'
     | '/pedido/confirmado'
     | '/produto/$slug'
@@ -504,19 +650,26 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/cadastro'
+    | '/cardapio'
     | '/central-agons-92x'
     | '/checkout'
     | '/emporio'
+    | '/entregas'
     | '/esqueci-senha'
     | '/login'
     | '/minha-conta'
+    | '/privacidade'
     | '/redefinir-senha'
+    | '/termos'
+    | '/api/admin-operations'
     | '/api/admin-session'
     | '/api/admin-state'
     | '/api/checkout'
+    | '/api/customer-account'
     | '/api/customer-password-reset'
     | '/api/customer-register'
     | '/api/customer-session'
+    | '/api/delivery-calendar'
     | '/api/emporio'
     | '/api/health'
     | '/api/media'
@@ -526,7 +679,9 @@ export interface FileRouteTypes {
     | '/categoria/$slug'
     | '/central-agons-92x/aparencia'
     | '/central-agons-92x/banners'
+    | '/central-agons-92x/calendario'
     | '/central-agons-92x/categorias'
+    | '/central-agons-92x/clientes'
     | '/central-agons-92x/conteudo'
     | '/central-agons-92x/cupons'
     | '/central-agons-92x/emporio'
@@ -534,10 +689,14 @@ export interface FileRouteTypes {
     | '/central-agons-92x/esqueci-senha'
     | '/central-agons-92x/home'
     | '/central-agons-92x/kits'
+    | '/central-agons-92x/logistica'
     | '/central-agons-92x/objetivos'
     | '/central-agons-92x/pedidos'
+    | '/central-agons-92x/producao'
     | '/central-agons-92x/produtos'
     | '/central-agons-92x/redefinir-senha'
+    | '/central-agons-92x/relatorios'
+    | '/kit/$slug'
     | '/objetivo/$slug'
     | '/pedido/confirmado'
     | '/produto/$slug'
@@ -550,19 +709,26 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastroRoute: typeof CadastroRoute
+  CardapioRoute: typeof CardapioRoute
   CentralAgons92xRoute: typeof CentralAgons92xRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
   EmporioRoute: typeof EmporioRoute
+  EntregasRoute: typeof EntregasRoute
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute
   LoginRoute: typeof LoginRoute
   MinhaContaRoute: typeof MinhaContaRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  TermosRoute: typeof TermosRoute
+  ApiAdminOperationsRoute: typeof ApiAdminOperationsRoute
   ApiAdminSessionRoute: typeof ApiAdminSessionRoute
   ApiAdminStateRoute: typeof ApiAdminStateRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
+  ApiCustomerAccountRoute: typeof ApiCustomerAccountRoute
   ApiCustomerPasswordResetRoute: typeof ApiCustomerPasswordResetRoute
   ApiCustomerRegisterRoute: typeof ApiCustomerRegisterRoute
   ApiCustomerSessionRoute: typeof ApiCustomerSessionRoute
+  ApiDeliveryCalendarRoute: typeof ApiDeliveryCalendarRoute
   ApiEmporioRoute: typeof ApiEmporioRouteWithChildren
   ApiHealthRoute: typeof ApiHealthRoute
   ApiMediaRoute: typeof ApiMediaRouteWithChildren
@@ -570,6 +736,7 @@ export interface RootRouteChildren {
   ApiPasswordResetRoute: typeof ApiPasswordResetRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   CategoriaSlugRoute: typeof CategoriaSlugRoute
+  KitSlugRoute: typeof KitSlugRoute
   ObjetivoSlugRoute: typeof ObjetivoSlugRoute
   PedidoConfirmadoRoute: typeof PedidoConfirmadoRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
@@ -578,11 +745,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/redefinir-senha': {
       id: '/redefinir-senha'
       path: '/redefinir-senha'
       fullPath: '/redefinir-senha'
       preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/minha-conta': {
@@ -606,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EsqueciSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entregas': {
+      id: '/entregas'
+      path: '/entregas'
+      fullPath: '/entregas'
+      preLoaderRoute: typeof EntregasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/emporio': {
       id: '/emporio'
       path: '/emporio'
@@ -625,6 +813,13 @@ declare module '@tanstack/react-router' {
       path: '/central-agons-92x'
       fullPath: '/central-agons-92x'
       preLoaderRoute: typeof CentralAgons92xRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cardapio': {
+      id: '/cardapio'
+      path: '/cardapio'
+      fullPath: '/cardapio'
+      preLoaderRoute: typeof CardapioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro': {
@@ -669,6 +864,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObjetivoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kit/$slug': {
+      id: '/kit/$slug'
+      path: '/kit/$slug'
+      fullPath: '/kit/$slug'
+      preLoaderRoute: typeof KitSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/central-agons-92x/relatorios': {
+      id: '/central-agons-92x/relatorios'
+      path: '/relatorios'
+      fullPath: '/central-agons-92x/relatorios'
+      preLoaderRoute: typeof CentralAgons92xRelatoriosRouteImport
+      parentRoute: typeof CentralAgons92xRoute
+    }
     '/central-agons-92x/redefinir-senha': {
       id: '/central-agons-92x/redefinir-senha'
       path: '/redefinir-senha'
@@ -683,6 +892,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CentralAgons92xProdutosRouteImport
       parentRoute: typeof CentralAgons92xRoute
     }
+    '/central-agons-92x/producao': {
+      id: '/central-agons-92x/producao'
+      path: '/producao'
+      fullPath: '/central-agons-92x/producao'
+      preLoaderRoute: typeof CentralAgons92xProducaoRouteImport
+      parentRoute: typeof CentralAgons92xRoute
+    }
     '/central-agons-92x/pedidos': {
       id: '/central-agons-92x/pedidos'
       path: '/pedidos'
@@ -695,6 +911,13 @@ declare module '@tanstack/react-router' {
       path: '/objetivos'
       fullPath: '/central-agons-92x/objetivos'
       preLoaderRoute: typeof CentralAgons92xObjetivosRouteImport
+      parentRoute: typeof CentralAgons92xRoute
+    }
+    '/central-agons-92x/logistica': {
+      id: '/central-agons-92x/logistica'
+      path: '/logistica'
+      fullPath: '/central-agons-92x/logistica'
+      preLoaderRoute: typeof CentralAgons92xLogisticaRouteImport
       parentRoute: typeof CentralAgons92xRoute
     }
     '/central-agons-92x/kits': {
@@ -746,11 +969,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CentralAgons92xConteudoRouteImport
       parentRoute: typeof CentralAgons92xRoute
     }
+    '/central-agons-92x/clientes': {
+      id: '/central-agons-92x/clientes'
+      path: '/clientes'
+      fullPath: '/central-agons-92x/clientes'
+      preLoaderRoute: typeof CentralAgons92xClientesRouteImport
+      parentRoute: typeof CentralAgons92xRoute
+    }
     '/central-agons-92x/categorias': {
       id: '/central-agons-92x/categorias'
       path: '/categorias'
       fullPath: '/central-agons-92x/categorias'
       preLoaderRoute: typeof CentralAgons92xCategoriasRouteImport
+      parentRoute: typeof CentralAgons92xRoute
+    }
+    '/central-agons-92x/calendario': {
+      id: '/central-agons-92x/calendario'
+      path: '/calendario'
+      fullPath: '/central-agons-92x/calendario'
+      preLoaderRoute: typeof CentralAgons92xCalendarioRouteImport
       parentRoute: typeof CentralAgons92xRoute
     }
     '/central-agons-92x/banners': {
@@ -816,6 +1053,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEmporioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/delivery-calendar': {
+      id: '/api/delivery-calendar'
+      path: '/api/delivery-calendar'
+      fullPath: '/api/delivery-calendar'
+      preLoaderRoute: typeof ApiDeliveryCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/customer-session': {
       id: '/api/customer-session'
       path: '/api/customer-session'
@@ -837,6 +1081,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCustomerPasswordResetRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/customer-account': {
+      id: '/api/customer-account'
+      path: '/api/customer-account'
+      fullPath: '/api/customer-account'
+      preLoaderRoute: typeof ApiCustomerAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/checkout': {
       id: '/api/checkout'
       path: '/api/checkout'
@@ -856,6 +1107,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin-session'
       fullPath: '/api/admin-session'
       preLoaderRoute: typeof ApiAdminSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin-operations': {
+      id: '/api/admin-operations'
+      path: '/api/admin-operations'
+      fullPath: '/api/admin-operations'
+      preLoaderRoute: typeof ApiAdminOperationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/media/$id': {
@@ -885,7 +1143,9 @@ declare module '@tanstack/react-router' {
 interface CentralAgons92xRouteChildren {
   CentralAgons92xAparenciaRoute: typeof CentralAgons92xAparenciaRoute
   CentralAgons92xBannersRoute: typeof CentralAgons92xBannersRoute
+  CentralAgons92xCalendarioRoute: typeof CentralAgons92xCalendarioRoute
   CentralAgons92xCategoriasRoute: typeof CentralAgons92xCategoriasRoute
+  CentralAgons92xClientesRoute: typeof CentralAgons92xClientesRoute
   CentralAgons92xConteudoRoute: typeof CentralAgons92xConteudoRoute
   CentralAgons92xCuponsRoute: typeof CentralAgons92xCuponsRoute
   CentralAgons92xEmporioRoute: typeof CentralAgons92xEmporioRoute
@@ -893,17 +1153,22 @@ interface CentralAgons92xRouteChildren {
   CentralAgons92xEsqueciSenhaRoute: typeof CentralAgons92xEsqueciSenhaRoute
   CentralAgons92xHomeRoute: typeof CentralAgons92xHomeRoute
   CentralAgons92xKitsRoute: typeof CentralAgons92xKitsRoute
+  CentralAgons92xLogisticaRoute: typeof CentralAgons92xLogisticaRoute
   CentralAgons92xObjetivosRoute: typeof CentralAgons92xObjetivosRoute
   CentralAgons92xPedidosRoute: typeof CentralAgons92xPedidosRoute
+  CentralAgons92xProducaoRoute: typeof CentralAgons92xProducaoRoute
   CentralAgons92xProdutosRoute: typeof CentralAgons92xProdutosRoute
   CentralAgons92xRedefinirSenhaRoute: typeof CentralAgons92xRedefinirSenhaRoute
+  CentralAgons92xRelatoriosRoute: typeof CentralAgons92xRelatoriosRoute
   CentralAgons92xIndexRoute: typeof CentralAgons92xIndexRoute
 }
 
 const CentralAgons92xRouteChildren: CentralAgons92xRouteChildren = {
   CentralAgons92xAparenciaRoute: CentralAgons92xAparenciaRoute,
   CentralAgons92xBannersRoute: CentralAgons92xBannersRoute,
+  CentralAgons92xCalendarioRoute: CentralAgons92xCalendarioRoute,
   CentralAgons92xCategoriasRoute: CentralAgons92xCategoriasRoute,
+  CentralAgons92xClientesRoute: CentralAgons92xClientesRoute,
   CentralAgons92xConteudoRoute: CentralAgons92xConteudoRoute,
   CentralAgons92xCuponsRoute: CentralAgons92xCuponsRoute,
   CentralAgons92xEmporioRoute: CentralAgons92xEmporioRoute,
@@ -911,10 +1176,13 @@ const CentralAgons92xRouteChildren: CentralAgons92xRouteChildren = {
   CentralAgons92xEsqueciSenhaRoute: CentralAgons92xEsqueciSenhaRoute,
   CentralAgons92xHomeRoute: CentralAgons92xHomeRoute,
   CentralAgons92xKitsRoute: CentralAgons92xKitsRoute,
+  CentralAgons92xLogisticaRoute: CentralAgons92xLogisticaRoute,
   CentralAgons92xObjetivosRoute: CentralAgons92xObjetivosRoute,
   CentralAgons92xPedidosRoute: CentralAgons92xPedidosRoute,
+  CentralAgons92xProducaoRoute: CentralAgons92xProducaoRoute,
   CentralAgons92xProdutosRoute: CentralAgons92xProdutosRoute,
   CentralAgons92xRedefinirSenhaRoute: CentralAgons92xRedefinirSenhaRoute,
+  CentralAgons92xRelatoriosRoute: CentralAgons92xRelatoriosRoute,
   CentralAgons92xIndexRoute: CentralAgons92xIndexRoute,
 }
 
@@ -949,19 +1217,26 @@ const ApiMediaRouteWithChildren = ApiMediaRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroRoute: CadastroRoute,
+  CardapioRoute: CardapioRoute,
   CentralAgons92xRoute: CentralAgons92xRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
   EmporioRoute: EmporioRoute,
+  EntregasRoute: EntregasRoute,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
   LoginRoute: LoginRoute,
   MinhaContaRoute: MinhaContaRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  TermosRoute: TermosRoute,
+  ApiAdminOperationsRoute: ApiAdminOperationsRoute,
   ApiAdminSessionRoute: ApiAdminSessionRoute,
   ApiAdminStateRoute: ApiAdminStateRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
+  ApiCustomerAccountRoute: ApiCustomerAccountRoute,
   ApiCustomerPasswordResetRoute: ApiCustomerPasswordResetRoute,
   ApiCustomerRegisterRoute: ApiCustomerRegisterRoute,
   ApiCustomerSessionRoute: ApiCustomerSessionRoute,
+  ApiDeliveryCalendarRoute: ApiDeliveryCalendarRoute,
   ApiEmporioRoute: ApiEmporioRouteWithChildren,
   ApiHealthRoute: ApiHealthRoute,
   ApiMediaRoute: ApiMediaRouteWithChildren,
@@ -969,6 +1244,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPasswordResetRoute: ApiPasswordResetRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   CategoriaSlugRoute: CategoriaSlugRoute,
+  KitSlugRoute: KitSlugRoute,
   ObjetivoSlugRoute: ObjetivoSlugRoute,
   PedidoConfirmadoRoute: PedidoConfirmadoRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,

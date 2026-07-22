@@ -6,14 +6,22 @@ import { getStripe } from "@/lib/stripe.server";
 import { allowRequest } from "@/lib/rate-limit.server";
 import { hasSameOrigin } from "@/lib/security.server";
 import { attachStripeSession, createPendingOrder } from "@/lib/orders.server";
+import { getCustomerSession } from "@/lib/customer-auth.server";
+import { assertFulfillmentAvailable } from "@/lib/fulfillment.server";
+import { saveCustomerAddress } from "@/lib/customer-account.server";
 
 export const Route = createFileRoute("/api/checkout")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          if (!hasSameOrigin(request)) return Response.json({ error: "Origem não autorizada." }, { status: 403 });
-          if (!allowRequest(request, "checkout", 12, 10 * 60 * 1000)) return Response.json({ error: "Muitas tentativas. Aguarde alguns minutos." }, { status: 429 });
+          if (!hasSameOrigin(request))
+            return Response.json({ error: "Origem não autorizada." }, { status: 403 });
+          if (!allowRequest(request, "checkout", 12, 10 * 60 * 1000))
+            return Response.json(
+              { error: "Muitas tentativas. Aguarde alguns minutos." },
+              { status: 429 },
+            );
           const parsed = checkoutRequestSchema.safeParse(await request.json());
           if (!parsed.success) {
             return Response.json(
@@ -24,27 +32,56 @@ export const Route = createFileRoute("/api/checkout")({
 
           const payload = parsed.data;
           const { lines, summary, orderId } = await buildVerifiedCheckout(payload);
+          await assertFulfillmentAvailable({
+            day: payload.delivery.scheduledDate,
+            type: payload.delivery.fulfillmentType,
+            quantity: lines.reduce((sum, line) => sum + line.qty, 0),
+            city: payload.delivery.city,
+            state: payload.delivery.state,
+          });
+          const customerSession = await getCustomerSession(request);
+          if (payload.subscriptionInterval && !customerSession)
+            throw new Error("Entre ou crie sua conta para contratar uma assinatura.");
+          if (customerSession && payload.delivery.fulfillmentType === "delivery")
+            await saveCustomerAddress(customerSession.userId, {
+              label: "Casa",
+              cep: payload.delivery.cep,
+              street: payload.delivery.street,
+              number: payload.delivery.number,
+              complement: payload.delivery.complement,
+              district: payload.delivery.district,
+              isDefault: true,
+            });
           const stripe = getStripe();
           const origin = new URL(request.url).origin;
           const addressLine2 = [payload.delivery.complement, payload.delivery.district]
             .filter(Boolean)
             .join(" · ");
 
-          await createPendingOrder({ id: orderId, payload, lines, summary });
+          await createPendingOrder({
+            id: orderId,
+            customerUserId: customerSession?.userId,
+            payload,
+            lines,
+            summary,
+          });
 
           const customer = await stripe.customers.create(
             {
               name: payload.customer.name,
               email: payload.customer.email,
               phone: payload.customer.phone,
-              address: {
-                line1: `${payload.delivery.street}, ${payload.delivery.number}`,
-                line2: addressLine2 || undefined,
-                city: payload.delivery.city,
-                state: payload.delivery.state,
-                postal_code: payload.delivery.cep,
-                country: "BR",
-              },
+              address:
+                payload.delivery.fulfillmentType === "delivery"
+                  ? {
+                      line1: `${payload.delivery.street}, ${payload.delivery.number}`,
+                      line2: addressLine2 || undefined,
+                      city: payload.delivery.city,
+                      state: payload.delivery.state,
+                      postal_code: payload.delivery.cep,
+                      country: "BR",
+                    }
+                  : undefined,
               metadata: { order_id: orderId },
             },
             { idempotencyKey: `${orderId}:customer` },
@@ -77,10 +114,17 @@ export const Route = createFileRoute("/api/checkout")({
               },
             },
           };
+          const recurring = payload.subscriptionInterval
+            ? {
+                weekly: { interval: "week" as const },
+                monthly: { interval: "month" as const },
+                quarterly: { interval: "month" as const, interval_count: 3 },
+              }[payload.subscriptionInterval]
+            : undefined;
 
           const session = await stripe.checkout.sessions.create(
             {
-              mode: "payment",
+              mode: payload.subscriptionInterval ? "subscription" : "payment",
               locale: "pt-BR",
               customer: customer.id,
               client_reference_id: orderId,
@@ -89,18 +133,29 @@ export const Route = createFileRoute("/api/checkout")({
                 price_data: {
                   currency: "brl",
                   unit_amount: Math.round(line.unitPrice * 100),
+                  recurring,
                   product_data: {
                     name: line.name,
-                    description: line.description.slice(0, 240),
+                    description: (line.selections?.length
+                      ? line.selections.map((item) => `${item.qty}x ${item.name}`).join(", ")
+                      : line.description
+                    ).slice(0, 240),
                     images: line.image.startsWith("https://") ? [line.image] : undefined,
                     metadata: { product_id: line.productId },
                   },
                 },
               })),
               discounts,
-              shipping_options: [shippingOption],
-              shipping_address_collection: { allowed_countries: ["BR"] },
-              customer_update: { address: "auto", name: "auto", shipping: "auto" },
+              shipping_options:
+                payload.delivery.fulfillmentType === "delivery" ? [shippingOption] : undefined,
+              shipping_address_collection:
+                payload.delivery.fulfillmentType === "delivery"
+                  ? { allowed_countries: ["BR"] }
+                  : undefined,
+              customer_update:
+                payload.delivery.fulfillmentType === "delivery"
+                  ? { address: "auto", name: "auto", shipping: "auto" }
+                  : { name: "auto" },
               billing_address_collection: "required",
               submit_type: "pay",
               success_url: `${origin}/pedido/confirmado?session_id={CHECKOUT_SESSION_ID}`,
@@ -122,10 +177,25 @@ export const Route = createFileRoute("/api/checkout")({
                 coupon: summary.coupon?.code ?? "",
                 delivery_cep: payload.delivery.cep.replace(/\D/g, ""),
                 delivery_notes: payload.delivery.notes.slice(0, 200),
+                fulfillment_type: payload.delivery.fulfillmentType,
+                scheduled_date: payload.delivery.scheduledDate,
+                delivery_window: payload.delivery.deliveryWindow,
+                subscription_interval: payload.subscriptionInterval || "",
               },
-              payment_intent_data: {
-                metadata: { order_id: orderId, source: "ago_store" },
-              },
+              payment_intent_data: payload.subscriptionInterval
+                ? undefined
+                : {
+                    metadata: { order_id: orderId, source: "ago_store" },
+                  },
+              subscription_data: payload.subscriptionInterval
+                ? {
+                    metadata: {
+                      order_id: orderId,
+                      source: "ago_store",
+                      subscription_interval: payload.subscriptionInterval,
+                    },
+                  }
+                : undefined,
             },
             { idempotencyKey: `${orderId}:session` },
           );

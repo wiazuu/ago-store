@@ -32,5 +32,14 @@ services:
       - key: ADMIN_INITIAL_PASSWORD
         sync: false
       - key: EMAIL_FROM
-        # Troque para pedidos@agogf.com.br depois de validar o domínio no Resend.
-        value: agô <pedidos@agons.com.br>
+        value: agô <pedidos@agogf.com.br>
+      - key: EMAIL_REPLY_TO
+        sync: false
+      - key: ADMIN_NOTIFICATION_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false

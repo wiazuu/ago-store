@@ -3,7 +3,7 @@ import type { Product } from "@/data/types";
 import { brl, priceOf } from "@/lib/format";
 import { useShopStore } from "@/store/shop-store";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 
 const BADGE_MAP: Record<string, { label: string; className: string }> = {
   "mais-vendido": { label: "Mais vendido", className: "bg-primary text-primary-foreground" },
@@ -15,35 +15,67 @@ const BADGE_MAP: Record<string, { label: string; className: string }> = {
 
 export function ProductCard({ p }: { p: Product }) {
   const add = useShopStore((s) => s.add);
+  const favorites = useShopStore((s) => s.favoriteIds);
+  const setFavorites = useShopStore((s) => s.setFavorites);
   const badge = p.badge && BADGE_MAP[p.badge];
   const finalPrice = priceOf(p);
 
   return (
     <article className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card brand-shadow transition-all duration-300 hover:-translate-y-1 hover:brand-shadow-lg sm:rounded-3xl">
-      <Link
-        to="/produto/$slug"
-        params={{ slug: p.slug }}
-        className="relative block aspect-square overflow-hidden bg-muted"
-      >
-        <img
-          src={p.image}
-          alt={p.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
-        {badge && (
-          <span
-            className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[9px] font-bold sm:left-3 sm:top-3 sm:px-3 sm:text-xs ${badge.className}`}
-          >
-            {badge.label}
-          </span>
-        )}
-        {p.promoPrice && p.promoPrice < p.price && (
-          <span className="absolute right-2 top-2 rounded-full bg-destructive px-2 py-1 text-[9px] font-bold text-destructive-foreground sm:right-3 sm:top-3 sm:px-2.5 sm:text-xs">
-            -{Math.round((1 - p.promoPrice / p.price) * 100)}%
-          </span>
-        )}
-      </Link>
+      <div className="relative">
+        <Link
+          to="/produto/$slug"
+          params={{ slug: p.slug }}
+          className="relative block aspect-square overflow-hidden bg-muted"
+        >
+          <img
+            src={p.image}
+            alt={p.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+          {badge && (
+            <span
+              className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[9px] font-bold sm:left-3 sm:top-3 sm:px-3 sm:text-xs ${badge.className}`}
+            >
+              {badge.label}
+            </span>
+          )}
+          {p.promoPrice && p.promoPrice < p.price && (
+            <span className="absolute right-2 top-2 rounded-full bg-destructive px-2 py-1 text-[9px] font-bold text-destructive-foreground sm:right-3 sm:top-3 sm:px-2.5 sm:text-xs">
+              -{Math.round((1 - p.promoPrice / p.price) * 100)}%
+            </span>
+          )}
+        </Link>
+        <button
+          type="button"
+          aria-label={favorites.includes(p.id) ? "Remover dos favoritos" : "Salvar nos favoritos"}
+          className="absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-card/95 shadow"
+          onClick={async () => {
+            const response = await fetch("/api/customer-account", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "favorite", productId: p.id }),
+            });
+            if (response.status === 401) {
+              window.location.assign("/login");
+              return;
+            }
+            if (response.ok) {
+              const result = (await response.json()) as { favorite: boolean };
+              setFavorites(
+                result.favorite
+                  ? [...new Set([...favorites, p.id])]
+                  : favorites.filter((id) => id !== p.id),
+              );
+            }
+          }}
+        >
+          <Heart
+            className={`h-5 w-5 ${favorites.includes(p.id) ? "fill-coral text-coral" : "text-charcoal"}`}
+          />
+        </button>
+      </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3 sm:p-5">
         <div className="flex flex-wrap gap-1">
@@ -74,27 +106,32 @@ export function ProductCard({ p }: { p: Product }) {
         </div>
 
         <div className="mt-auto flex flex-col items-stretch gap-2 pt-2 sm:flex-row sm:items-end sm:justify-between">
-          {finalPrice > 0 ? <>
-          <div className="flex flex-col">
-            {p.promoPrice && p.promoPrice < p.price && (
-              <span className="text-xs text-muted-foreground line-through">{brl(p.price)}</span>
-            )}
-            <span className="font-display text-lg text-foreground sm:text-xl">
-              {brl(finalPrice)}
-            </span>
-          </div>
-          <Button
-            size="sm"
-            className="w-full px-2 sm:w-auto sm:px-3"
-            disabled={p.stock <= 0}
-            onClick={() =>
-              add({ productId: p.id, name: p.name, image: p.image, price: finalPrice })
-            }
-          >
-            <ShoppingBag className="w-4 h-4" />
-            {p.stock > 0 ? "Adicionar" : "Esgotado"}
-          </Button>
-          </> : <div className="w-full rounded-xl bg-orange-soft px-3 py-2 text-center text-xs font-extrabold text-primary-dark">Disponível nos planos</div>}
+          {finalPrice > 0 ? (
+            <>
+              <div className="flex flex-col">
+                {p.promoPrice && p.promoPrice < p.price && (
+                  <span className="text-xs text-muted-foreground line-through">{brl(p.price)}</span>
+                )}
+                <span className="font-display text-lg text-foreground sm:text-xl">
+                  {brl(finalPrice)}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                className="w-full px-2 sm:w-auto sm:px-3"
+                onClick={() =>
+                  add({ productId: p.id, name: p.name, image: p.image, price: finalPrice })
+                }
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Adicionar
+              </Button>
+            </>
+          ) : (
+            <div className="w-full rounded-xl bg-orange-soft px-3 py-2 text-center text-xs font-extrabold text-primary-dark">
+              Disponível nos planos
+            </div>
+          )}
         </div>
       </div>
     </article>

@@ -20,6 +20,8 @@ O endpoint recebe estes eventos:
 - `checkout.session.completed`
 - `checkout.session.async_payment_succeeded`
 - `checkout.session.async_payment_failed`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
 
 ## Cloudflare
 
@@ -36,4 +38,4 @@ No painel Stripe, registre o endpoint HTTPS de produção:
 https://SEU-DOMINIO/api/stripe-webhook
 ```
 
-O projeto atual mantém catálogo e pedidos em `localStorage`, adequado ao protótipo. Para operação com múltiplos clientes, conecte o webhook a um banco durável (por exemplo, Cloudflare D1 ou PostgreSQL) para que separação e entrega não dependam do retorno do navegador à página de confirmação.
+Pedidos, clientes, assinaturas e eventos da Stripe são persistidos no PostgreSQL. O `localStorage` é usado somente para preservar o carrinho e preferências de navegação no dispositivo.

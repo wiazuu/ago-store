@@ -70,6 +70,9 @@ export interface Kit {
   discountPct: number;
   categoryId?: ID;
   active: boolean;
+  customizable?: boolean;
+  mealCount?: number;
+  subscriptionEligible?: boolean;
 }
 
 export interface Banner {

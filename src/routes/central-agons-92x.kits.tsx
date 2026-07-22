@@ -24,10 +24,14 @@ const empty: Kit = {
   price: 0,
   discountPct: 10,
   active: true,
+  customizable: true,
+  mealCount: 7,
+  subscriptionEligible: true,
 };
 
 function AdminKits() {
   const items = useAdminStore((s) => s.kits);
+  const products = useAdminStore((s) => s.products);
   const upsert = useAdminStore((s) => s.upsertKit);
   const del = useAdminStore((s) => s.deleteKit);
   const [editing, setEditing] = useState<Kit | null>(null);
@@ -101,7 +105,72 @@ function AdminKits() {
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                 />
               </div>
-              <ImageUploadField value={editing.image} onChange={(image) => setEditing({ ...editing, image })} />
+              <ImageUploadField
+                value={editing.image}
+                onChange={(image) => setEditing({ ...editing, image })}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Quantidade de refeições</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={editing.mealCount || 1}
+                    onChange={(e) => setEditing({ ...editing, mealCount: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2 pt-6">
+                  <label className="flex items-center gap-2">
+                    <Switch
+                      checked={editing.customizable ?? true}
+                      onCheckedChange={(value) => setEditing({ ...editing, customizable: value })}
+                    />
+                    Cliente escolhe os pratos
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <Switch
+                      checked={editing.subscriptionEligible ?? true}
+                      onCheckedChange={(value) =>
+                        setEditing({ ...editing, subscriptionEligible: value })
+                      }
+                    />
+                    Disponível para assinatura
+                  </label>
+                </div>
+              </div>
+              <div>
+                <Label>Pratos permitidos no kit</Label>
+                <div className="mt-2 max-h-52 space-y-2 overflow-y-auto rounded-xl border p-3">
+                  {products
+                    .filter((product) => product.active)
+                    .map((product) => {
+                      const selected = editing.items.some((item) => item.productId === product.id);
+                      return (
+                        <label key={product.id} className="flex items-center gap-3 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={(e) =>
+                              setEditing({
+                                ...editing,
+                                items: e.target.checked
+                                  ? [...editing.items, { productId: product.id, qty: 1 }]
+                                  : editing.items.filter((item) => item.productId !== product.id),
+                              })
+                            }
+                          />
+                          <span className="flex-1">{product.name}</span>
+                        </label>
+                      );
+                    })}
+                  {products.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Cadastre refeições antes de montar o kit.
+                    </p>
+                  )}
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Preço</Label>

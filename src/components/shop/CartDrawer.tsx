@@ -1,7 +1,7 @@
 import { X, Minus, Plus, Trash2, Tag } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useShopStore, useCartSubtotal } from "@/store/shop-store";
-import { useInstitutional, useAdminStore } from "@/store/admin-store";
+import { useAdminStore } from "@/store/admin-store";
 import { brl } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -17,13 +17,10 @@ export function CartDrawer() {
   const coupon = useShopStore((s) => s.coupon);
   const setCoupon = useShopStore((s) => s.setCoupon);
   const subtotal = useCartSubtotal();
-  const inst = useInstitutional();
   const coupons = useAdminStore((s) => s.coupons);
   const [couponInput, setCouponInput] = useState(coupon ?? "");
   const [error, setError] = useState<string | null>(null);
 
-  const freeShipMin = inst.freeShippingMin;
-  const progress = Math.min(100, (subtotal / freeShipMin) * 100);
   const lines = useMemo(
     () =>
       items.map((item) => ({ productId: item.productId, qty: item.qty, unitPrice: item.price })),
@@ -33,7 +30,8 @@ export function CartDrawer() {
     lines,
     couponCode: coupon,
     coupons,
-    freeShippingMin: freeShipMin,
+    freeShippingMin: 0,
+    fulfillmentType: "pickup",
   });
 
   useEffect(() => {
@@ -50,7 +48,8 @@ export function CartDrawer() {
       lines,
       couponCode: couponInput,
       coupons,
-      freeShippingMin: freeShipMin,
+      freeShippingMin: 0,
+      fulfillmentType: "pickup",
     });
     if (candidate.error || !candidate.coupon) return setError(candidate.error ?? "Cupom inválido.");
     setCoupon(candidate.coupon.code);
@@ -87,26 +86,9 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            {freeShipMin > 0 && <div className="px-5 py-3 bg-muted/50 border-b">
-              {subtotal < freeShipMin ? (
-                <>
-                  <div className="text-xs text-muted-foreground mb-1.5">
-                    Faltam <b className="text-foreground">{brl(freeShipMin - subtotal)}</b> para
-                    frete grátis
-                  </div>
-                  <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="text-xs text-secondary-foreground bg-secondary/20 py-1 px-2 rounded text-center">
-                  🎉 Você ganhou frete grátis!
-                </div>
-              )}
-            </div>}
+            <div className="border-b bg-muted/50 px-5 py-3 text-center text-xs text-muted-foreground">
+              Entrega em toda Manaus por R$ 15 · retirada gratuita
+            </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {items.map((i) => (
@@ -115,6 +97,21 @@ export function CartDrawer() {
                   <div className="flex-1 flex flex-col">
                     <div className="text-sm font-medium leading-tight">{i.name}</div>
                     <div className="text-sm text-muted-foreground">{brl(i.price)}</div>
+                    {i.selections?.length ? (
+                      <div className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
+                        {i.selections.map((item) => `${item.qty}× ${item.name}`).join(" · ")}
+                      </div>
+                    ) : null}
+                    {i.subscriptionInterval && (
+                      <div className="mt-1 text-[11px] font-bold text-secondary">
+                        Assinatura{" "}
+                        {i.subscriptionInterval === "weekly"
+                          ? "semanal"
+                          : i.subscriptionInterval === "monthly"
+                            ? "mensal"
+                            : "trimestral"}
+                      </div>
+                    )}
                     <div className="mt-auto flex items-center justify-between">
                       <div className="flex items-center border rounded-full">
                         <button onClick={() => setQty(i.productId, i.qty - 1)} className="p-1.5">
@@ -163,8 +160,8 @@ export function CartDrawer() {
                   <span>{brl(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frete</span>
-                  <span>{summary.shipping === 0 ? "Grátis" : brl(summary.shipping)}</span>
+                  <span className="text-muted-foreground">Entrega/retirada</span>
+                  <span>Escolha no checkout</span>
                 </div>
                 {summary.discount > 0 && (
                   <div className="flex justify-between text-secondary">
