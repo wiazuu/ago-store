@@ -13,8 +13,8 @@ services:
       - key: PORT
         value: 3000
       - key: PUBLIC_SITE_URL
-        # Troque para https://agogf.com.br somente após o DNS e o certificado estarem validados.
-        value: https://agons-store.onrender.com
+        # Domínio canônico validado no Render.
+        value: https://agogf.com.br
       - key: DATABASE_URL
         sync: false
       - key: DATABASE_SSL
