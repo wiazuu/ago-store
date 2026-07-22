@@ -1,4 +1,5 @@
 import { useAppearance } from "@/store/admin-store";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 
 type BrandLogoProps = {
   compact?: boolean;
@@ -7,7 +8,9 @@ type BrandLogoProps = {
 };
 
 export function BrandLogo({ compact = false, inverse = false, className = "" }: BrandLogoProps) {
-  const appearance = useAppearance();
+  const initialContent = useInitialPublicContent();
+  const storedAppearance = useAppearance();
+  const appearance = initialContent?.appearance ?? storedAppearance;
 
   if (appearance.logoUrl) {
     return (

@@ -8,7 +8,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
+import { useRef } from "react";
 
 import appCss from "../styles.css?url";
 import { Header } from "../components/shop/Header";
@@ -16,6 +18,29 @@ import { Footer } from "../components/shop/Footer";
 import { CartDrawer } from "../components/shop/CartDrawer";
 import { AppearanceSync } from "../components/AppearanceSync";
 import { PublicContentSync } from "../components/PublicContentSync";
+import { PublicContentProvider } from "../components/PublicContentProvider";
+import { useAdminStore, type PublicAdminData } from "../store/admin-store";
+
+type InitialPublicContent = {
+  data: PublicAdminData;
+  updatedAt: string;
+};
+
+const getInitialPublicContent = createServerFn({ method: "GET" }).handler(
+  async (): Promise<InitialPublicContent | null> => {
+    try {
+      const { publicAdminContent, readAdminContent } = await import("../lib/admin-content.server");
+      const stored = await readAdminContent();
+      return {
+        data: publicAdminContent(stored.data),
+        updatedAt: stored.updatedAt,
+      };
+    } catch (error) {
+      console.error("Falha ao carregar o conteudo publico inicial.", error);
+      return null;
+    }
+  },
+);
 
 function NotFoundComponent() {
   return (
@@ -74,6 +99,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: () => getInitialPublicContent(),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -121,19 +147,33 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const initialPublicContent = Route.useLoaderData();
+  const appliedInitialVersion = useRef<string | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/central-agons-92x");
-  const isAuth = ["/login", "/cadastro", "/esqueci-senha", "/redefinir-senha"].some((path) => pathname.startsWith(path));
+  const isAuth = ["/login", "/cadastro", "/esqueci-senha", "/redefinir-senha"].some((path) =>
+    pathname.startsWith(path),
+  );
   const showChrome = !isAdmin && !isAuth;
+
+  // Populate the public store before Header, Outlet and Footer render. This keeps
+  // the server HTML and the first browser paint on the published database state,
+  // instead of briefly showing the empty-store fallback while the API request runs.
+  if (initialPublicContent && appliedInitialVersion.current !== initialPublicContent.updatedAt) {
+    useAdminStore.getState().applyPublicData(initialPublicContent.data);
+    appliedInitialVersion.current = initialPublicContent.updatedAt;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppearanceSync />
-      <PublicContentSync enabled={showChrome} />
-      {showChrome && <Header />}
-      <Outlet />
-      {showChrome && <Footer />}
-      {showChrome && <CartDrawer />}
+      <PublicContentProvider data={initialPublicContent?.data ?? null}>
+        <AppearanceSync />
+        <PublicContentSync enabled={showChrome} />
+        {showChrome && <Header />}
+        <Outlet />
+        {showChrome && <Footer />}
+        {showChrome && <CartDrawer />}
+      </PublicContentProvider>
     </QueryClientProvider>
   );
 }

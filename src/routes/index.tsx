@@ -18,6 +18,7 @@ import {
 import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { brl } from "@/lib/format";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 
@@ -28,16 +29,23 @@ function Icon({ name, className }: { name: string; className?: string }) {
 }
 
 function HomePage() {
-  const home = useHome();
-  const cats = useCategories()
+  const initialContent = useInitialPublicContent();
+  const storedHome = useHome();
+  const storedCategories = useCategories();
+  const storedObjectives = useObjectives();
+  const storedProducts = useProducts();
+  const storedKits = useKits();
+  const storedInstitutional = useInstitutional();
+  const home = initialContent?.home ?? storedHome;
+  const cats = (initialContent?.categories ?? storedCategories)
     .filter((c) => c.active)
     .sort((a, b) => a.order - b.order);
-  const objectives = useObjectives()
+  const objectives = (initialContent?.objectives ?? storedObjectives)
     .filter((o) => o.active)
     .sort((a, b) => a.order - b.order);
-  const products = useProducts();
-  const kits = useKits().filter((k) => k.active);
-  const inst = useInstitutional();
+  const products = initialContent?.products ?? storedProducts;
+  const kits = (initialContent?.kits ?? storedKits).filter((k) => k.active);
+  const inst = initialContent?.institutional ?? storedInstitutional;
 
   const featured = products.filter((p) => p.featured && p.active).slice(0, 8);
   const hasContent: Record<string, boolean> = {

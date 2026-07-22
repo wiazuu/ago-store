@@ -10,11 +10,16 @@ import {
 } from "lucide-react";
 import { useAppearance, useCategories, useInstitutional } from "@/store/admin-store";
 import { BrandLogo } from "@/components/shop/BrandLogo";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 
 export function Footer() {
-  const categories = useCategories();
-  const institutional = useInstitutional();
-  const appearance = useAppearance();
+  const initialContent = useInitialPublicContent();
+  const storedCategories = useCategories();
+  const storedInstitutional = useInstitutional();
+  const storedAppearance = useAppearance();
+  const categories = initialContent?.categories ?? storedCategories;
+  const institutional = initialContent?.institutional ?? storedInstitutional;
+  const appearance = initialContent?.appearance ?? storedAppearance;
   const whatsapp = institutional.support.whatsapp.replace(/\D/g, "");
 
   return (

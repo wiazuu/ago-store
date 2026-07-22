@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useCartCount, useShopStore } from "@/store/shop-store";
 import { useCategories, useHome } from "@/store/admin-store";
 import { BrandLogo } from "@/components/shop/BrandLogo";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -12,8 +13,11 @@ export function Header() {
   const count = useCartCount();
   const openCart = useShopStore((state) => state.openDrawer);
   const customerAuthed = useShopStore((state) => state.authed);
-  const home = useHome();
-  const categories = useCategories()
+  const initialContent = useInitialPublicContent();
+  const storedHome = useHome();
+  const storedCategories = useCategories();
+  const home = initialContent?.home ?? storedHome;
+  const categories = (initialContent?.categories ?? storedCategories)
     .filter((category) => category.active)
     .sort((a, b) => a.order - b.order);
   const navigate = useNavigate();
