@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useCartCount, useShopStore } from "@/store/shop-store";
-import { useCategories, useHome } from "@/store/admin-store";
+import { useCategories, useHome, useObjectives } from "@/store/admin-store";
 import { BrandLogo } from "@/components/shop/BrandLogo";
 import { useInitialPublicContent } from "@/components/PublicContentProvider";
 
@@ -16,12 +16,35 @@ export function Header() {
   const initialContent = useInitialPublicContent();
   const storedHome = useHome();
   const storedCategories = useCategories();
+  const storedObjectives = useObjectives();
   const home = initialContent?.home ?? storedHome;
   const categories = (initialContent?.categories ?? storedCategories)
     .filter((category) => category.active)
     .sort((a, b) => a.order - b.order);
   const navigationCategories = categories.filter(
     (category) => !["cardapio", "emporio"].includes(category.slug.toLowerCase()),
+  );
+  const objectives = (initialContent?.objectives ?? storedObjectives)
+    .filter((objective) => objective.active)
+    .sort((a, b) => a.order - b.order);
+  const quickNavigation = [
+    ...objectives.map((objective) => ({
+      id: `objective-${objective.id}`,
+      name: objective.name,
+      slug: objective.slug,
+      type: "objective" as const,
+    })),
+    ...navigationCategories.map((category) => ({
+      id: `category-${category.id}`,
+      name: category.name,
+      slug: category.slug,
+      type: "category" as const,
+    })),
+  ].filter(
+    (item, index, items) =>
+      items.findIndex(
+        (candidate) => candidate.name.trim().toLowerCase() === item.name.trim().toLowerCase(),
+      ) === index,
   );
   const navigate = useNavigate();
 
@@ -116,59 +139,32 @@ export function Header() {
         </div>
       </div>
 
-      <nav
-        className="border-t border-border/60 bg-card/80 lg:hidden"
-        aria-label="Categorias rápidas"
-      >
-        <div className="scrollbar-none flex gap-2 overflow-x-auto px-4 py-2.5">
-          <Link
-            to="/emporio"
-            className="shrink-0 rounded-full border border-primary bg-primary px-3.5 py-2 text-xs font-extrabold text-primary-foreground"
-          >
-            Empório
-          </Link>
-          <Link
-            to="/cardapio"
-            search={{}}
-            className="shrink-0 rounded-full border bg-background px-3.5 py-2 text-xs font-extrabold"
-          >
-            Cardápio
-          </Link>
-          {navigationCategories.slice(0, 5).map((category, index) => (
-            <Link
-              key={category.id}
-              to="/categoria/$slug"
-              params={{ slug: category.slug }}
-              className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-extrabold transition active:scale-95 ${
-                index === 0
-                  ? "border-secondary bg-secondary text-secondary-foreground"
-                  : "border-border bg-background text-foreground"
-              }`}
-            >
-              {category.name}
-            </Link>
-          ))}
-        </div>
-      </nav>
-
-      <nav className="hidden border-t border-border/60 lg:block" aria-label="Cardápio">
-        <div className="container-page scrollbar-none flex items-center gap-7 overflow-x-auto py-3 text-sm font-semibold">
-          <Link to="/emporio" className="shrink-0 font-extrabold text-primary-dark">
-            Empório
-          </Link>
-          <Link to="/cardapio" search={{}} className="shrink-0 font-extrabold text-secondary">
-            Cardápio
-          </Link>
-          {navigationCategories.slice(0, 7).map((category) => (
-            <Link
-              key={category.id}
-              to="/categoria/$slug"
-              params={{ slug: category.slug }}
-              className="shrink-0 transition-colors hover:text-secondary"
-            >
-              {category.name}
-            </Link>
-          ))}
+      <nav className="border-t border-border/60 bg-card/80" aria-label="Linhas do cardápio">
+        <div className="container-page scrollbar-none flex items-center gap-6 overflow-x-auto py-3 text-sm font-medium">
+          {quickNavigation.slice(0, 6).map((item) =>
+            item.type === "objective" ? (
+              <Link
+                key={item.id}
+                to="/objetivo/$slug"
+                params={{ slug: item.slug }}
+                className="shrink-0 transition-colors hover:text-primary-dark"
+              >
+                {item.name}
+              </Link>
+            ) : (
+              <Link
+                key={item.id}
+                to="/categoria/$slug"
+                params={{ slug: item.slug }}
+                className="shrink-0 transition-colors hover:text-primary-dark"
+              >
+                {item.name}
+              </Link>
+            ),
+          )}
+          <a href="/#kits" className="shrink-0 font-semibold text-primary-dark">
+            Kits
+          </a>
         </div>
       </nav>
 
