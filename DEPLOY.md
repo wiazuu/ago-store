@@ -61,12 +61,12 @@ Depois teste a home, Empório, login administrativo, publicação, cadastro de c
 3. Selecione `checkout.session.completed`, `checkout.session.async_payment_succeeded` e `checkout.session.async_payment_failed`.
 4. Copie o segredo `whsec_...` para `STRIPE_WEBHOOK_SECRET` no Render.
 5. Faça um pagamento de teste e confirme que o pedido aparece no painel.
-6. Quando o domínio estiver ativo, crie o endpoint equivalente para `https://agons.com.br/api/stripe-webhook` antes de remover o endereço antigo.
+6. Quando o domínio estiver ativo, crie o endpoint equivalente para `https://agogf.com.br/api/stripe-webhook` antes de remover o endereço antigo.
 
 ## 6. E-mails e recuperação de senha
 
 1. Crie uma conta no Resend.
-2. Antes do domínio próprio, o Resend permite testes limitados com o remetente de teste. Para enviar a clientes, registre e valide `agons.com.br` no Resend.
+2. Antes do domínio próprio, o Resend permite testes limitados com o remetente de teste. Para enviar a clientes, registre e valide `agogf.com.br` no Resend.
 3. Configure no Render `RESEND_API_KEY`, `EMAIL_FROM` e `EMAIL_REPLY_TO`.
 4. Teste o cadastro e **Esqueci minha senha** de clientes em `/esqueci-senha`.
 5. Teste também a recuperação administrativa em `/central-agons-92x/esqueci-senha`.
@@ -74,10 +74,10 @@ Depois teste a home, Empório, login administrativo, publicação, cadastro de c
 
 ## 7. Domínio e HTTPS
 
-1. Depois de registrar `agons.com.br`, abra **Settings > Custom Domains** no serviço do Render.
-2. Adicione `agons.com.br` e `www.agons.com.br`.
+1. Depois de registrar `agogf.com.br`, abra **Settings > Custom Domains** no serviço do Render.
+2. Adicione `agogf.com.br` e `www.agogf.com.br`.
 3. Copie exatamente os registros exibidos para o painel DNS do registrador.
-4. Após a validação, altere `PUBLIC_SITE_URL` para `https://agons.com.br`.
+4. Após a validação, confirme `PUBLIC_SITE_URL=https://agogf.com.br`.
 5. O Render gera e renova o certificado HTTPS automaticamente.
 
 ## 8. Atualizações futuras

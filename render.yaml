@@ -5,12 +5,15 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
+    domains:
+      - agogf.com.br
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
       - key: PUBLIC_SITE_URL
+        # Troque para https://agogf.com.br somente após o DNS e o certificado estarem validados.
         value: https://agons-store.onrender.com
       - key: DATABASE_URL
         sync: false
@@ -29,4 +32,5 @@ services:
       - key: ADMIN_INITIAL_PASSWORD
         sync: false
       - key: EMAIL_FROM
+        # Troque para pedidos@agogf.com.br depois de validar o domínio no Resend.
         value: agô <pedidos@agons.com.br>

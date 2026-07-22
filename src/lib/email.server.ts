@@ -59,7 +59,7 @@ export async function sendCustomerPasswordResetEmail(input: { to: string; name: 
 
 export async function sendCustomerWelcomeEmail(input: { id: string; to: string; name: string }) {
   const title = "Bem-vindo à agô!";
-  const storeUrl = process.env.PUBLIC_SITE_URL || "https://agons.com.br";
+  const storeUrl = process.env.PUBLIC_SITE_URL || "https://agogf.com.br";
   const body = `<p>Olá, ${escapeHtml(input.name)}.</p><p>Sua conta foi criada com sucesso. Agora você pode entrar na loja com seu e-mail e senha.</p><p style="margin:28px 0"><a href="${escapeHtml(storeUrl)}" style="display:inline-block;background:#f5a623;color:#27241f;text-decoration:none;font-weight:800;padding:14px 22px;border-radius:999px">Conhecer o cardápio</a></p>`;
   return sendTransactionalEmail({ eventKey: `customer-welcome:${input.id}`, type: "customer.welcome", to: input.to, subject: title, html: layout(title, body, "Sua conta na agô foi criada"), text: `Olá, ${input.name}. Sua conta na loja agô foi criada com sucesso. Acesse ${storeUrl}.` });
 }

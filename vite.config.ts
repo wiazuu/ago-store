@@ -19,6 +19,6 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 8080,
-    allowedHosts: ["localhost", "127.0.0.1", "agons.com.br", ".ngrok-free.app"],
+    allowedHosts: ["localhost", "127.0.0.1", "agogf.com.br", "www.agogf.com.br", ".ngrok-free.app"],
   },
 });
