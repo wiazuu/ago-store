@@ -5,11 +5,23 @@ import { Button } from "@/components/ui/button";
 import { useKits, useProducts } from "@/store/admin-store";
 import { useShopStore } from "@/store/shop-store";
 import { brl } from "@/lib/format";
+import {
+  getMealPlanDefinition,
+  mealPlanIntervalLabel,
+  type MealPlanInterval,
+} from "@/lib/meal-plans";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 export const Route = createFileRoute("/kit/$slug")({ component: KitBuilder });
 function KitBuilder() {
   const { slug } = Route.useParams();
-  const kit = useKits().find((item) => item.slug === slug && item.active);
-  const products = useProducts();
+  const initialContent = useInitialPublicContent();
+  const storedKits = useKits();
+  const storedProducts = useProducts();
+  const kit = (initialContent?.kits ?? storedKits).find(
+    (item) => item.slug === slug && item.active,
+  );
+  const products = initialContent?.products ?? storedProducts;
+  const plan = getMealPlanDefinition(kit?.planCode);
   const add = useShopStore((s) => s.add);
   const navigate = useNavigate();
   const allowed = useMemo(
@@ -28,7 +40,7 @@ function KitBuilder() {
   );
   const [subscriptionInterval, setSubscriptionInterval] = useState<
     "" | "weekly" | "monthly" | "quarterly"
-  >("");
+  >((kit?.planInterval || plan?.interval || "") as "" | MealPlanInterval);
   if (!kit)
     return (
       <main className="container-page py-20 text-center">
@@ -38,10 +50,27 @@ function KitBuilder() {
         </Link>
       </main>
     );
-  const target = kit.mealCount || kit.items.reduce((sum, item) => sum + item.qty, 0);
+  const target =
+    kit.mealsPerWeek ||
+    plan?.mealsPerWeek ||
+    kit.mealCount ||
+    kit.items.reduce((sum, item) => sum + item.qty, 0);
+  const durationWeeks = kit.durationWeeks || plan?.weeks || 1;
+  const totalEntitlement = target * durationWeeks;
+  const maxVarieties = kit.maxVarieties || (plan ? 3 : allowed.length);
   const total = Object.values(selection).reduce((sum, qty) => sum + qty, 0);
+  const selectedVarieties = Object.values(selection).filter((qty) => qty > 0).length;
+  const effectiveSubscriptionInterval = plan?.interval || kit.planInterval || subscriptionInterval;
   const change = (id: string, delta: number) =>
-    setSelection((current) => ({ ...current, [id]: Math.max(0, (current[id] || 0) + delta) }));
+    setSelection((current) => {
+      if (
+        delta > 0 &&
+        !current[id] &&
+        Object.values(current).filter((qty) => qty > 0).length >= maxVarieties
+      )
+        return current;
+      return { ...current, [id]: Math.max(0, (current[id] || 0) + delta) };
+    });
   const finish = () => {
     if (total !== target) return;
     add({
@@ -56,7 +85,7 @@ function KitBuilder() {
           name: product.name,
           qty: selection[product.id],
         })),
-      subscriptionInterval: subscriptionInterval || undefined,
+      subscriptionInterval: effectiveSubscriptionInterval || undefined,
     });
     navigate({ to: "/checkout" });
   };
@@ -77,6 +106,20 @@ function KitBuilder() {
           <h1 className="font-display text-4xl">{kit.name}</h1>
           <p className="mt-3 leading-7 text-muted-foreground">{kit.description}</p>
           <div className="mt-5 font-display text-3xl">{brl(kit.price)}</div>
+          {plan && (
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="rounded-xl bg-muted p-3">
+                <strong className="block text-base">{plan.code}</strong>Plano
+              </div>
+              <div className="rounded-xl bg-muted p-3">
+                <strong className="block text-base">{totalEntitlement}</strong>refeições
+              </div>
+              <div className="rounded-xl bg-muted p-3">
+                <strong className="block text-base">{durationWeeks}</strong>
+                {durationWeeks === 1 ? "semana" : "semanas"}
+              </div>
+            </div>
+          )}
           {kit.subscriptionEligible && (
             <p className="mt-3 rounded-xl bg-green-soft p-3 text-sm text-secondary">
               Também disponível para recorrência. A ativação da assinatura aparece na etapa de
@@ -85,6 +128,13 @@ function KitBuilder() {
           )}
         </section>
         <section className="rounded-3xl border bg-card p-5 sm:p-7">
+          {plan && (
+            <div className="mb-5 rounded-2xl border border-secondary/20 bg-green-soft p-4 text-sm text-secondary">
+              Monte a primeira entrega com {target} refeições e no máximo {maxVarieties} sabores. O
+              plano completo inclui {totalEntitlement} refeições em {durationWeeks}{" "}
+              {durationWeeks === 1 ? "semana" : "semanas"}.
+            </div>
+          )}
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="font-display text-2xl">Escolha {target} refeições</h2>
@@ -119,7 +169,10 @@ function KitBuilder() {
                   <strong className="w-5 text-center">{selection[product.id] || 0}</strong>
                   <button
                     type="button"
-                    disabled={total >= target}
+                    disabled={
+                      total >= target ||
+                      (!selection[product.id] && selectedVarieties >= maxVarieties)
+                    }
                     className="grid h-9 w-9 place-items-center rounded-full bg-primary disabled:opacity-40"
                     onClick={() => change(product.id, 1)}
                   >
@@ -134,7 +187,15 @@ function KitBuilder() {
               Este kit ainda não possui pratos configurados.
             </p>
           )}
-          {kit.subscriptionEligible && (
+          {plan && (
+            <div className="mt-6 rounded-2xl bg-muted p-4 text-sm">
+              <strong>Cobrança por {mealPlanIntervalLabel(plan.interval)}</strong>
+              <p className="mt-1 text-xs text-muted-foreground">
+                A seleção semanal usa até 3 sabores para distribuir as 7 refeições de cada entrega.
+              </p>
+            </div>
+          )}
+          {kit.subscriptionEligible && !plan && (
             <div className="mt-6 rounded-2xl bg-muted p-4">
               <label className="font-bold" htmlFor="recurrence">
                 Forma de compra

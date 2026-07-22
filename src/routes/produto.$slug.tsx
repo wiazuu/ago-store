@@ -1,25 +1,24 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useProducts, useCategories } from "@/store/admin-store";
-import { useShopStore } from "@/store/shop-store";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Button } from "@/components/ui/button";
-import { brl, priceOf } from "@/lib/format";
-import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { Layers3 } from "lucide-react";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 
 export const Route = createFileRoute("/produto/$slug")({ component: ProductPage });
 
 function ProductPage() {
   const { slug } = Route.useParams();
-  const products = useProducts();
-  const categories = useCategories();
+  const initialContent = useInitialPublicContent();
+  const storedProducts = useProducts();
+  const storedCategories = useCategories();
+  const products = initialContent?.products ?? storedProducts;
+  const categories = initialContent?.categories ?? storedCategories;
   const p = products.find((x) => x.slug === slug);
   if (!p) throw notFound();
   const cat = categories.find((c) => c.id === p.categoryId);
   const [img, setImg] = useState(p.image);
-  const [qty, setQty] = useState(1);
-  const add = useShopStore((s) => s.add);
-  const price = priceOf(p);
   const related = products
     .filter((x) => x.categoryId === p.categoryId && x.id !== p.id)
     .slice(0, 4);
@@ -76,33 +75,18 @@ function ProductPage() {
           </h1>
           <p className="text-muted-foreground mb-6">{p.shortDescription}</p>
 
-          {price > 0 ? <><div className="flex items-baseline gap-3 mb-6">
-            {p.promoPrice && (
-              <span className="text-muted-foreground line-through">{brl(p.price)}</span>
-            )}
-            <span className="font-display text-4xl">{brl(price)}</span>
+          <div className="mb-6 rounded-2xl bg-orange-soft p-5">
+            <strong className="font-display text-xl">Disponível nos planos A1–A3 e B1–B3</strong>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Este prato faz parte do cardápio de refeições. Escolha um plano e monte sua semana com
+              até 3 sabores.
+            </p>
+            <a href="/#planos">
+              <Button className="mt-4">
+                <Layers3 className="h-4 w-4" /> Ver planos
+              </Button>
+            </a>
           </div>
-
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center border rounded-full">
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="p-3">
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="px-4 font-medium">{qty}</span>
-              <button onClick={() => setQty(Math.min(p.stock, qty + 1))} className="p-3">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-            <Button
-              size="lg"
-              disabled={p.stock <= 0}
-              className="flex-1"
-              onClick={() => add({ productId: p.id, name: p.name, image: p.image, price, qty })}
-            >
-              <ShoppingBag className="w-4 h-4" />{" "}
-              {p.stock > 0 ? "Adicionar à sacola" : "Produto esgotado"}
-            </Button>
-          </div></> : <div className="mb-6 rounded-2xl bg-orange-soft p-5"><strong className="font-display text-xl">Disponível nos planos A1 e A2</strong><p className="mt-1 text-sm text-muted-foreground">Escolha um plano para montar seu cardápio com esta refeição.</p></div>}
 
           <div className="mb-6 grid grid-cols-2 gap-3 rounded-2xl bg-orange-soft p-4 sm:grid-cols-4">
             {[

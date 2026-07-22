@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { Product } from "@/data/types";
-import { brl, priceOf } from "@/lib/format";
 import { useShopStore } from "@/store/shop-store";
 import { Button } from "@/components/ui/button";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, Layers3 } from "lucide-react";
 
 const BADGE_MAP: Record<string, { label: string; className: string }> = {
   "mais-vendido": { label: "Mais vendido", className: "bg-primary text-primary-foreground" },
@@ -14,11 +13,9 @@ const BADGE_MAP: Record<string, { label: string; className: string }> = {
 };
 
 export function ProductCard({ p }: { p: Product }) {
-  const add = useShopStore((s) => s.add);
   const favorites = useShopStore((s) => s.favoriteIds);
   const setFavorites = useShopStore((s) => s.setFavorites);
   const badge = p.badge && BADGE_MAP[p.badge];
-  const finalPrice = priceOf(p);
 
   return (
     <article className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card brand-shadow transition-all duration-300 hover:-translate-y-1 hover:brand-shadow-lg sm:rounded-3xl">
@@ -105,33 +102,12 @@ export function ProductCard({ p }: { p: Product }) {
           <span className="rounded-lg bg-muted px-1 py-1.5">{p.carbs}g carb.</span>
         </div>
 
-        <div className="mt-auto flex flex-col items-stretch gap-2 pt-2 sm:flex-row sm:items-end sm:justify-between">
-          {finalPrice > 0 ? (
-            <>
-              <div className="flex flex-col">
-                {p.promoPrice && p.promoPrice < p.price && (
-                  <span className="text-xs text-muted-foreground line-through">{brl(p.price)}</span>
-                )}
-                <span className="font-display text-lg text-foreground sm:text-xl">
-                  {brl(finalPrice)}
-                </span>
-              </div>
-              <Button
-                size="sm"
-                className="w-full px-2 sm:w-auto sm:px-3"
-                onClick={() =>
-                  add({ productId: p.id, name: p.name, image: p.image, price: finalPrice })
-                }
-              >
-                <ShoppingBag className="w-4 h-4" />
-                Adicionar
-              </Button>
-            </>
-          ) : (
-            <div className="w-full rounded-xl bg-orange-soft px-3 py-2 text-center text-xs font-extrabold text-primary-dark">
-              Disponível nos planos
-            </div>
-          )}
+        <div className="mt-auto pt-2">
+          <a href="/#planos" className="block">
+            <Button size="sm" variant="outline" className="w-full">
+              <Layers3 className="h-4 w-4" /> Escolher em um plano
+            </Button>
+          </a>
         </div>
       </div>
     </article>

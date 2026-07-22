@@ -73,6 +73,11 @@ export interface Kit {
   customizable?: boolean;
   mealCount?: number;
   subscriptionEligible?: boolean;
+  planCode?: "A1" | "A2" | "A3" | "B1" | "B2" | "B3";
+  planInterval?: "weekly" | "monthly" | "quarterly";
+  durationWeeks?: number;
+  mealsPerWeek?: number;
+  maxVarieties?: number;
 }
 
 export interface Banner {

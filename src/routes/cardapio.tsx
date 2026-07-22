@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Input } from "@/components/ui/input";
 import { useObjectives, useProducts } from "@/store/admin-store";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 const searchSchema = z.object({ q: z.string().optional() });
 export const Route = createFileRoute("/cardapio")({
   validateSearch: searchSchema,
@@ -12,8 +13,11 @@ export const Route = createFileRoute("/cardapio")({
 });
 function Menu() {
   const { q } = Route.useSearch();
-  const products = useProducts().filter((p) => p.active);
-  const objectives = useObjectives().filter((o) => o.active);
+  const initialContent = useInitialPublicContent();
+  const storedProducts = useProducts();
+  const storedObjectives = useObjectives();
+  const products = (initialContent?.products ?? storedProducts).filter((p) => p.active);
+  const objectives = (initialContent?.objectives ?? storedObjectives).filter((o) => o.active);
   const [text, setText] = useState(q || "");
   const [objective, setObjective] = useState("");
   const [tag, setTag] = useState("");

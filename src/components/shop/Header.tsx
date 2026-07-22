@@ -131,6 +131,12 @@ export function Header() {
           >
             Cardápio
           </Link>
+          <a
+            href="/#planos"
+            className="shrink-0 rounded-full border bg-background px-3.5 py-2 text-xs font-extrabold"
+          >
+            Planos A e B
+          </a>
           {categories.slice(0, 5).map((category, index) => (
             <Link
               key={category.id}
@@ -156,6 +162,12 @@ export function Header() {
           <Link to="/cardapio" search={{}} className="shrink-0 font-extrabold text-secondary">
             Cardápio completo
           </Link>
+          <a
+            href="/#planos"
+            className="shrink-0 font-extrabold transition-colors hover:text-primary-dark"
+          >
+            Planos A e B
+          </a>
           {categories.slice(0, 7).map((category) => (
             <Link
               key={category.id}

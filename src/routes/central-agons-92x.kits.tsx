@@ -11,6 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { brl } from "@/lib/format";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
+import {
+  getMealPlanDefinition,
+  mealPlanDefinitions,
+  mealPlanIntervalLabel,
+  type MealPlanCode,
+} from "@/lib/meal-plans";
 
 export const Route = createFileRoute("/central-agons-92x/kits")({ component: AdminKits });
 
@@ -27,6 +33,11 @@ const empty: Kit = {
   customizable: true,
   mealCount: 7,
   subscriptionEligible: true,
+  planCode: "A1",
+  planInterval: "weekly",
+  durationWeeks: 1,
+  mealsPerWeek: 7,
+  maxVarieties: 3,
 };
 
 function AdminKits() {
@@ -37,9 +48,35 @@ function AdminKits() {
   const [editing, setEditing] = useState<Kit | null>(null);
   const [open, setOpen] = useState(false);
 
+  const createPlanStructure = () => {
+    for (const plan of mealPlanDefinitions) {
+      if (items.some((kit) => kit.planCode === plan.code)) continue;
+      upsert({
+        ...empty,
+        id: `plan-${plan.code.toLowerCase()}`,
+        name: `Plano ${plan.code}`,
+        slug: `plano-${plan.code.toLowerCase()}`,
+        description:
+          plan.line === "A"
+            ? "Linha essencial com refeições equilibradas para a rotina."
+            : "Linha premium com ingredientes e preparações especiais.",
+        discountPct: 0,
+        planCode: plan.code,
+        planInterval: plan.interval,
+        durationWeeks: plan.weeks,
+        mealsPerWeek: plan.mealsPerWeek,
+        mealCount: plan.mealsPerWeek,
+        maxVarieties: 3,
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" onClick={createPlanStructure}>
+          Criar estrutura A1–B3
+        </Button>
         <Button
           onClick={() => {
             setEditing({ ...empty, id: `k${Date.now()}` });
@@ -61,6 +98,12 @@ function AdminKits() {
                 <div className="font-display text-lg">{k.name}</div>
                 <div className="font-medium">{brl(k.price)}</div>
               </div>
+              {k.planCode && (
+                <div className="mb-2 inline-flex rounded-full bg-secondary/10 px-2.5 py-1 text-xs font-bold text-secondary">
+                  {k.planCode} · {k.durationWeeks || getMealPlanDefinition(k.planCode)?.weeks}{" "}
+                  semana(s)
+                </div>
+              )}
               <div className="text-sm text-muted-foreground mb-3">
                 {k.items.length} itens · -{k.discountPct}%
               </div>
@@ -109,14 +152,50 @@ function AdminKits() {
                 value={editing.image}
                 onChange={(image) => setEditing({ ...editing, image })}
               />
+              <div>
+                <Label>Plano</Label>
+                <select
+                  className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  value={editing.planCode || ""}
+                  onChange={(event) => {
+                    const plan = getMealPlanDefinition(event.target.value as MealPlanCode);
+                    if (!plan) return;
+                    setEditing({
+                      ...editing,
+                      planCode: plan.code,
+                      planInterval: plan.interval,
+                      durationWeeks: plan.weeks,
+                      mealsPerWeek: plan.mealsPerWeek,
+                      mealCount: plan.mealsPerWeek,
+                      maxVarieties: 3,
+                      subscriptionEligible: true,
+                      customizable: true,
+                    });
+                  }}
+                >
+                  <option value="" disabled>
+                    Selecione A1, A2, A3, B1, B2 ou B3
+                  </option>
+                  {mealPlanDefinitions.map((plan) => (
+                    <option key={plan.code} value={plan.code}>
+                      {plan.code} · Linha {plan.line === "A" ? "essencial" : "premium"} ·{" "}
+                      {mealPlanIntervalLabel(plan.interval)}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  A1/B1: 7 refeições; A2/B2: 28; A3/B3: 84. Cada semana aceita até 3 sabores.
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Quantidade de refeições</Label>
+                  <Label>Refeições por semana</Label>
                   <Input
                     type="number"
                     min={1}
                     max={100}
                     value={editing.mealCount || 1}
+                    disabled={Boolean(editing.planCode)}
                     onChange={(e) => setEditing({ ...editing, mealCount: Number(e.target.value) })}
                   />
                 </div>

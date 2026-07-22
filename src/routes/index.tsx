@@ -19,6 +19,7 @@ import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { brl } from "@/lib/format";
 import { useInitialPublicContent } from "@/components/PublicContentProvider";
+import { mealPlanDefinitions, mealPlanIntervalLabel } from "@/lib/meal-plans";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 
@@ -48,13 +49,20 @@ function HomePage() {
   const inst = initialContent?.institutional ?? storedInstitutional;
 
   const featured = products.filter((p) => p.featured && p.active).slice(0, 8);
+  const alwaysVisibleSections = new Set(["categories", "objectives", "featured", "kits"]);
+  const planKits = new Map(
+    kits.flatMap((kit) => {
+      const inferredCode = kit.planCode || kit.name.toUpperCase().match(/\b[AB][123]\b/)?.[0];
+      return inferredCode ? [[inferredCode, kit] as const] : [];
+    }),
+  );
   const hasContent: Record<string, boolean> = {
     hero: Boolean(home.hero.title.trim() && home.hero.image.trim()),
     benefits: home.benefits.some((item) => item.title.trim()),
-    categories: cats.length > 0,
-    objectives: objectives.length > 0,
-    featured: featured.length > 0,
-    kits: kits.length > 0,
+    categories: true,
+    objectives: true,
+    featured: true,
+    kits: true,
     midBanner: Boolean(
       home.midBanner.active && home.midBanner.title.trim() && home.midBanner.image.trim(),
     ),
@@ -65,8 +73,20 @@ function HomePage() {
     ),
     faq: home.faq.some((item) => item.question.trim() && item.answer.trim()),
   };
-  const sections = home.sections
-    .filter((section) => section.active && hasContent[section.key])
+  const configuredSectionKeys = new Set(home.sections.map((section) => section.key));
+  const sections = [
+    ...home.sections,
+    ...[
+      { key: "categories", label: "Compre por categoria", active: true, order: 3 },
+      { key: "objectives", label: "Compre por objetivo", active: true, order: 4 },
+      { key: "featured", label: "Cardápio da semana", active: true, order: 5 },
+      { key: "kits", label: "Planos", active: true, order: 6 },
+    ].filter((section) => !configuredSectionKeys.has(section.key)),
+  ]
+    .filter(
+      (section) =>
+        (section.active || alwaysVisibleSections.has(section.key)) && hasContent[section.key],
+    )
     .sort((a, b) => a.order - b.order);
 
   const render: Record<string, React.ReactNode> = {
@@ -170,6 +190,15 @@ function HomePage() {
               </div>
             </Link>
           ))}
+          {cats.length === 0 && (
+            <div className="col-span-full w-full rounded-3xl border border-dashed bg-card p-8 text-center">
+              <Icons.LayoutGrid className="mx-auto h-9 w-9 text-primary" />
+              <h3 className="mt-3 font-display text-xl">Categorias em preparação</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                As linhas de refeições aparecerão aqui assim que forem publicadas no painel.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     ),
@@ -198,6 +227,15 @@ function HomePage() {
               </div>
             </Link>
           ))}
+          {objectives.length === 0 && (
+            <div className="col-span-full rounded-3xl border border-dashed bg-card p-8 text-center">
+              <Icons.Target className="mx-auto h-9 w-9 text-secondary" />
+              <h3 className="mt-3 font-display text-xl">Objetivos nutricionais</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Emagrecimento, ganho de massa e alimentação equilibrada serão organizados aqui.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     ),
@@ -224,6 +262,20 @@ function HomePage() {
           {featured.map((p) => (
             <ProductCard key={p.id} p={p} />
           ))}
+          {featured.length === 0 && (
+            <div className="col-span-full rounded-3xl border border-dashed bg-card p-10 text-center">
+              <Icons.UtensilsCrossed className="mx-auto h-10 w-10 text-primary" />
+              <h3 className="mt-3 font-display text-2xl">Cardápio sendo preparado</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Os pratos da semana aparecerão aqui após a publicação pelo painel.
+              </p>
+              <Link to="/cardapio" search={{}}>
+                <Button variant="outline" className="mt-5">
+                  Abrir cardápio
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </section>
     ),
@@ -232,35 +284,57 @@ function HomePage() {
       <section id="planos" className="container-page scroll-mt-28 py-10 sm:py-14">
         <div className="mb-8">
           <p className="section-kicker">Escolha sua frequência</p>
-          <h2 className="mt-1 font-display text-3xl md:text-4xl">Planos A1 e A2</h2>
+          <h2 className="mt-1 font-display text-3xl md:text-4xl">Planos das linhas A e B</h2>
           <p className="text-muted-foreground mt-2">Opções semanais, mensais e trimestrais</p>
         </div>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
-          {kits.slice(0, 6).map((k) => (
-            <div
-              key={k.id}
-              className="group flex flex-col overflow-hidden rounded-3xl bg-card brand-shadow"
-            >
-              <div className="relative aspect-[4/3]">
-                <img src={k.image} alt={k.name} className="w-full h-full object-cover" />
-                {k.discountPct > 0 && (
-                  <span className="absolute top-3 left-3 bg-secondary text-secondary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                    -{k.discountPct}%
+          {mealPlanDefinitions.map((plan) => {
+            const kit = planKits.get(plan.code);
+            const totalMeals = plan.weeks * plan.mealsPerWeek;
+            return (
+              <article
+                key={plan.code}
+                className={`group flex flex-col overflow-hidden rounded-3xl border bg-card brand-shadow ${plan.line === "B" ? "border-secondary/25" : "border-primary/25"}`}
+              >
+                <div
+                  className={`ago-pattern flex min-h-36 flex-col justify-between p-6 ${plan.line === "B" ? "bg-secondary text-cream" : "bg-orange-soft text-charcoal"}`}
+                >
+                  <span className="w-fit rounded-full bg-background/90 px-3 py-1 text-xs font-extrabold text-charcoal">
+                    {plan.line === "A" ? "Linha essencial" : "Linha premium"}
                   </span>
-                )}
-              </div>
-              <div className="p-5 flex flex-col flex-1">
-                <div className="font-display text-xl mb-1">{k.name}</div>
-                <p className="text-sm text-muted-foreground mb-4 flex-1">{k.description}</p>
-                <div className="flex items-center justify-between">
-                  <div className="font-display text-2xl">{brl(k.price)}</div>
-                  <Link to="/kit/$slug" params={{ slug: k.slug }}>
-                    <Button>Montar kit</Button>
-                  </Link>
+                  <strong className="mt-8 font-display text-5xl">{plan.code}</strong>
                 </div>
-              </div>
-            </div>
-          ))}
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="font-display text-xl">
+                    Plano {mealPlanIntervalLabel(plan.interval)}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {totalMeals} refeições · 7 por semana · até 3 sabores por entrega
+                  </p>
+                  <div className="mt-5 flex flex-1 items-end justify-between gap-3">
+                    <div>
+                      {kit && kit.price > 0 ? (
+                        <div className="font-display text-2xl">{brl(kit.price)}</div>
+                      ) : (
+                        <div className="text-sm font-semibold text-muted-foreground">
+                          Em configuração
+                        </div>
+                      )}
+                    </div>
+                    {kit ? (
+                      <Link to="/kit/$slug" params={{ slug: kit.slug }}>
+                        <Button disabled={kit.price <= 0 || kit.items.length === 0}>
+                          Escolher
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button disabled>Em breve</Button>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     ),
