@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getStripe } from "@/lib/stripe.server";
+import { reconcileStripeCheckoutSession } from "@/lib/orders.server";
 
 export const Route = createFileRoute("/api/checkout-session/$id")({
   server: {
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/api/checkout-session/$id")({
             stripe.checkout.sessions.retrieve(params.id),
             stripe.checkout.sessions.listLineItems(params.id, { limit: 50 }),
           ]);
+          await reconcileStripeCheckoutSession(session);
 
           return Response.json({
             id: session.id,

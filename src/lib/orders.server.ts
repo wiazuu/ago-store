@@ -1,5 +1,5 @@
 import "@tanstack/react-start/server-only";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
 import {
   auditLogs,
   customerSubscriptions,
@@ -78,15 +78,17 @@ export async function applyStripeEvent(event: {
   if (!event.orderId) return;
   if (!hasDatabase()) return;
   const orderId = event.orderId;
-  await getDatabase().transaction(async (tx) => {
+  const result = await getDatabase().transaction(async (tx) => {
     const inserted = await tx
       .insert(stripeEvents)
       .values({ id: event.id, type: event.type })
       .onConflictDoNothing()
       .returning({ id: stripeEvents.id });
-    if (!inserted.length) return;
+    if (!inserted.length) return { changed: false, paid: false };
+    const [current] = await tx.select().from(shopOrders).where(eq(shopOrders.id, orderId)).limit(1);
     const paid =
-      event.type === "checkout.session.completed" ||
+      event.paymentStatus === "paid" ||
+      event.paymentStatus === "no_payment_required" ||
       event.type === "checkout.session.async_payment_succeeded";
     const failed = event.type === "checkout.session.async_payment_failed";
     const status = paid ? "recebido" : failed ? "pagamento-falhou" : "aguardando-pagamento";
@@ -122,11 +124,10 @@ export async function applyStripeEvent(event: {
           })
           .onConflictDoNothing();
     }
+    return { changed: true, paid: paid && current?.paymentStatus !== "paid" };
   });
-  if (
-    event.type === "checkout.session.completed" ||
-    event.type === "checkout.session.async_payment_succeeded"
-  ) {
+  if (!result.changed) return;
+  if (result.paid) {
     const [order] = await getDatabase()
       .select()
       .from(shopOrders)
@@ -144,6 +145,74 @@ export async function applyStripeEvent(event: {
       .limit(1);
     if (order) await sendOrderStatusEmail(order, "payment_failed");
   }
+}
+
+export async function reconcileStripeCheckoutSession(session: {
+  id: string;
+  client_reference_id: string | null;
+  payment_status: string;
+}) {
+  if (!hasDatabase() || !session.client_reference_id) return null;
+  if (!["paid", "no_payment_required"].includes(session.payment_status)) return null;
+
+  const orderId = session.client_reference_id;
+  const result = await getDatabase().transaction(async (tx) => {
+    const [current] = await tx.select().from(shopOrders).where(eq(shopOrders.id, orderId)).limit(1);
+    if (!current) return null;
+    if (current.stripeSessionId && current.stripeSessionId !== session.id) return null;
+    if (current.paymentStatus === "paid") return { order: current, changed: false };
+
+    const [order] = await tx
+      .update(shopOrders)
+      .set({
+        stripeSessionId: session.id,
+        paymentStatus: "paid",
+        status: "recebido",
+        paidAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(shopOrders.id, orderId))
+      .returning();
+    if (!order) return null;
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      status: "recebido",
+      actorType: "stripe",
+      note: "stripe-session-reconciliation",
+    });
+    return { order, changed: true };
+  });
+
+  if (result?.changed) {
+    await sendOrderStatusEmail(result.order, "paid");
+    await sendNewOrderAdminEmail(result.order);
+  }
+  return result?.order ?? null;
+}
+
+async function reconcileRecentStripePayments() {
+  if (!hasDatabase()) return;
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const pending = await getDatabase()
+    .select({ stripeSessionId: shopOrders.stripeSessionId })
+    .from(shopOrders)
+    .where(
+      and(
+        ne(shopOrders.paymentStatus, "paid"),
+        isNotNull(shopOrders.stripeSessionId),
+        gte(shopOrders.createdAt, since),
+      ),
+    )
+    .orderBy(desc(shopOrders.createdAt))
+    .limit(20);
+
+  await Promise.allSettled(
+    pending.map(async ({ stripeSessionId }) => {
+      if (!stripeSessionId) return;
+      const session = await getStripe().checkout.sessions.retrieve(stripeSessionId);
+      await reconcileStripeCheckoutSession(session);
+    }),
+  );
 }
 export async function applyStripeSubscriptionEvent(input: {
   id: string;
@@ -222,9 +291,9 @@ export async function applyStripeInvoiceEvent(input: {
     });
 }
 export async function listOrders() {
-  return hasDatabase()
-    ? getDatabase().select().from(shopOrders).orderBy(desc(shopOrders.createdAt)).limit(500)
-    : [];
+  if (!hasDatabase()) return [];
+  await reconcileRecentStripePayments();
+  return getDatabase().select().from(shopOrders).orderBy(desc(shopOrders.createdAt)).limit(500);
 }
 export async function updateOrderStatus(
   id: string,

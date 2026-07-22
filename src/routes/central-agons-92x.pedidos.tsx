@@ -34,6 +34,13 @@ const statuses = [
   "reembolsado",
 ] as const;
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const paymentLabels: Record<string, string> = {
+  paid: "Pago",
+  unpaid: "Aguardando confirmaÃ§Ã£o",
+  failed: "Falhou",
+  refunded: "Reembolsado",
+  no_payment_required: "Pago",
+};
 
 function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -147,7 +154,19 @@ function AdminOrders() {
                     <td className="p-3 text-right font-bold">
                       {money.format(order.totalCents / 100)}
                     </td>
-                    <td className="p-3">{order.paymentStatus}</td>
+                    <td className="p-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          order.paymentStatus === "paid"
+                            ? "bg-secondary/10 text-secondary"
+                            : order.paymentStatus === "failed"
+                              ? "bg-destructive/10 text-destructive"
+                              : "bg-primary/15 text-charcoal"
+                        }`}
+                      >
+                        {paymentLabels[order.paymentStatus] || order.paymentStatus}
+                      </span>
+                    </td>
                     <td className="p-3">
                       <Select
                         value={order.status}
