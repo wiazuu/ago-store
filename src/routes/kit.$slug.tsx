@@ -21,7 +21,7 @@ function KitBuilder() {
     (item) => item.slug === slug && item.active,
   );
   const products = initialContent?.products ?? storedProducts;
-  const plan = getMealPlanDefinition(kit?.planCode);
+  const legacyPlan = getMealPlanDefinition(kit?.planCode);
   const add = useShopStore((s) => s.add);
   const navigate = useNavigate();
   const allowed = useMemo(
@@ -40,7 +40,7 @@ function KitBuilder() {
   );
   const [subscriptionInterval, setSubscriptionInterval] = useState<
     "" | "weekly" | "monthly" | "quarterly"
-  >((kit?.planInterval || plan?.interval || "") as "" | MealPlanInterval);
+  >((kit?.planInterval || legacyPlan?.interval || "") as "" | MealPlanInterval);
   if (!kit)
     return (
       <main className="container-page py-20 text-center">
@@ -52,15 +52,16 @@ function KitBuilder() {
     );
   const target =
     kit.mealsPerWeek ||
-    plan?.mealsPerWeek ||
+    legacyPlan?.mealsPerWeek ||
     kit.mealCount ||
     kit.items.reduce((sum, item) => sum + item.qty, 0);
-  const durationWeeks = kit.durationWeeks || plan?.weeks || 1;
+  const durationWeeks = kit.durationWeeks || legacyPlan?.weeks || 1;
   const totalEntitlement = target * durationWeeks;
-  const maxVarieties = kit.maxVarieties || (plan ? 3 : allowed.length);
+  const fixedInterval = kit.planInterval || legacyPlan?.interval;
+  const maxVarieties = kit.maxVarieties || (fixedInterval ? 3 : allowed.length);
   const total = Object.values(selection).reduce((sum, qty) => sum + qty, 0);
   const selectedVarieties = Object.values(selection).filter((qty) => qty > 0).length;
-  const effectiveSubscriptionInterval = plan?.interval || kit.planInterval || subscriptionInterval;
+  const effectiveSubscriptionInterval = fixedInterval || subscriptionInterval;
   const change = (id: string, delta: number) =>
     setSelection((current) => {
       if (
@@ -106,11 +107,8 @@ function KitBuilder() {
           <h1 className="font-display text-4xl">{kit.name}</h1>
           <p className="mt-3 leading-7 text-muted-foreground">{kit.description}</p>
           <div className="mt-5 font-display text-3xl">{brl(kit.price)}</div>
-          {plan && (
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="rounded-xl bg-muted p-3">
-                <strong className="block text-base">{plan.code}</strong>Plano
-              </div>
+          {fixedInterval && (
+            <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
               <div className="rounded-xl bg-muted p-3">
                 <strong className="block text-base">{totalEntitlement}</strong>refeições
               </div>
@@ -128,10 +126,10 @@ function KitBuilder() {
           )}
         </section>
         <section className="rounded-3xl border bg-card p-5 sm:p-7">
-          {plan && (
+          {fixedInterval && (
             <div className="mb-5 rounded-2xl border border-secondary/20 bg-green-soft p-4 text-sm text-secondary">
               Monte a primeira entrega com {target} refeições e no máximo {maxVarieties} sabores. O
-              plano completo inclui {totalEntitlement} refeições em {durationWeeks}{" "}
+              kit completo inclui {totalEntitlement} refeições em {durationWeeks}{" "}
               {durationWeeks === 1 ? "semana" : "semanas"}.
             </div>
           )}
@@ -187,15 +185,15 @@ function KitBuilder() {
               Este kit ainda não possui pratos configurados.
             </p>
           )}
-          {plan && (
+          {fixedInterval && (
             <div className="mt-6 rounded-2xl bg-muted p-4 text-sm">
-              <strong>Cobrança por {mealPlanIntervalLabel(plan.interval)}</strong>
+              <strong>Cobrança por {mealPlanIntervalLabel(fixedInterval)}</strong>
               <p className="mt-1 text-xs text-muted-foreground">
                 A seleção semanal usa até 3 sabores para distribuir as 7 refeições de cada entrega.
               </p>
             </div>
           )}
-          {kit.subscriptionEligible && !plan && (
+          {kit.subscriptionEligible && !fixedInterval && (
             <div className="mt-6 rounded-2xl bg-muted p-4">
               <label className="font-bold" htmlFor="recurrence">
                 Forma de compra

@@ -103,9 +103,9 @@ export function ProductCard({ p }: { p: Product }) {
         </div>
 
         <div className="mt-auto pt-2">
-          <a href="/#planos" className="block">
+          <a href="/#kits" className="block">
             <Button size="sm" variant="outline" className="w-full">
-              <Layers3 className="h-4 w-4" /> Escolher em um plano
+              <Layers3 className="h-4 w-4" /> Escolher em um kit
             </Button>
           </a>
         </div>

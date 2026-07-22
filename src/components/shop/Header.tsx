@@ -20,6 +20,9 @@ export function Header() {
   const categories = (initialContent?.categories ?? storedCategories)
     .filter((category) => category.active)
     .sort((a, b) => a.order - b.order);
+  const navigationCategories = categories.filter(
+    (category) => !["cardapio", "emporio"].includes(category.slug.toLowerCase()),
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -131,13 +134,7 @@ export function Header() {
           >
             Cardápio
           </Link>
-          <a
-            href="/#planos"
-            className="shrink-0 rounded-full border bg-background px-3.5 py-2 text-xs font-extrabold"
-          >
-            Planos A e B
-          </a>
-          {categories.slice(0, 5).map((category, index) => (
+          {navigationCategories.slice(0, 5).map((category, index) => (
             <Link
               key={category.id}
               to="/categoria/$slug"
@@ -160,15 +157,9 @@ export function Header() {
             Empório
           </Link>
           <Link to="/cardapio" search={{}} className="shrink-0 font-extrabold text-secondary">
-            Cardápio completo
+            Cardápio
           </Link>
-          <a
-            href="/#planos"
-            className="shrink-0 font-extrabold transition-colors hover:text-primary-dark"
-          >
-            Planos A e B
-          </a>
-          {categories.slice(0, 7).map((category) => (
+          {navigationCategories.slice(0, 7).map((category) => (
             <Link
               key={category.id}
               to="/categoria/$slug"

@@ -45,7 +45,7 @@ function Menu() {
     <main className="container-page py-10 sm:py-16">
       <header>
         <p className="section-kicker">Escolha do seu jeito</p>
-        <h1 className="font-display text-4xl">Cardápio completo</h1>
+        <h1 className="font-display text-4xl">Cardápio</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Filtre por objetivo, composição e necessidades alimentares.
         </p>

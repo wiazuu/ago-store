@@ -76,14 +76,14 @@ function ProductPage() {
           <p className="text-muted-foreground mb-6">{p.shortDescription}</p>
 
           <div className="mb-6 rounded-2xl bg-orange-soft p-5">
-            <strong className="font-display text-xl">Disponível nos planos A1–A3 e B1–B3</strong>
+            <strong className="font-display text-xl">Disponível nos kits de refeições</strong>
             <p className="mt-1 text-sm text-muted-foreground">
-              Este prato faz parte do cardápio de refeições. Escolha um plano e monte sua semana com
+              Este prato faz parte do cardápio de refeições. Escolha um kit e monte sua semana com
               até 3 sabores.
             </p>
-            <a href="/#planos">
+            <a href="/#kits">
               <Button className="mt-4">
-                <Layers3 className="h-4 w-4" /> Ver planos
+                <Layers3 className="h-4 w-4" /> Ver kits
               </Button>
             </a>
           </div>

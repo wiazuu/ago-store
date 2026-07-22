@@ -1,13 +1,17 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useObjectives, useProducts } from "@/store/admin-store";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { useInitialPublicContent } from "@/components/PublicContentProvider";
 
 export const Route = createFileRoute("/objetivo/$slug")({ component: ObjectivePage });
 
 function ObjectivePage() {
   const { slug } = Route.useParams();
-  const objectives = useObjectives();
-  const products = useProducts();
+  const initialContent = useInitialPublicContent();
+  const storedObjectives = useObjectives();
+  const storedProducts = useProducts();
+  const objectives = initialContent?.objectives ?? storedObjectives;
+  const products = initialContent?.products ?? storedProducts;
   const objective = objectives.find((o) => o.slug === slug);
   if (!objective) throw notFound();
 
