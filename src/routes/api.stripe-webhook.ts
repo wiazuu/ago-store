@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe.server";
-import { applyStripeEvent, applyStripeSubscriptionEvent } from "@/lib/orders.server";
+import {
+  applyStripeEvent,
+  applyStripeInvoiceEvent,
+  applyStripeSubscriptionEvent,
+} from "@/lib/orders.server";
 
 export const Route = createFileRoute("/api/stripe-webhook")({
   server: {
@@ -55,6 +59,22 @@ export const Route = createFileRoute("/api/stripe-webhook")({
               type: event.type,
               subscriptionId: subscription.id,
               status: subscription.status,
+            });
+          }
+
+          if (event.type === "invoice.upcoming" || event.type === "invoice.payment_failed") {
+            const invoice = event.data.object as Stripe.Invoice & {
+              subscription?: string | { id: string } | null;
+              parent?: {
+                subscription_details?: { subscription?: string | { id: string } | null } | null;
+              } | null;
+            };
+            const reference =
+              invoice.subscription || invoice.parent?.subscription_details?.subscription || null;
+            await applyStripeInvoiceEvent({
+              id: event.id,
+              type: event.type,
+              subscriptionId: typeof reference === "string" ? reference : reference?.id || null,
             });
           }
 

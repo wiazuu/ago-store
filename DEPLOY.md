@@ -58,7 +58,7 @@ Depois teste a home, Empório, login administrativo, publicação, cadastro de c
 
 1. Use chaves de teste até concluir compras ponta a ponta.
 2. No Stripe Dashboard, crie um webhook para `https://SEU-SITE.onrender.com/api/stripe-webhook`.
-3. Selecione `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `customer.subscription.updated` e `customer.subscription.deleted`.
+3. Selecione `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.upcoming` e `invoice.payment_failed`.
 4. Copie o segredo `whsec_...` para `STRIPE_WEBHOOK_SECRET` no Render.
 5. Faça um pagamento de teste e confirme que o pedido aparece no painel.
 6. Quando o domínio estiver ativo, crie o endpoint equivalente para `https://agogf.com.br/api/stripe-webhook` antes de remover o endereço antigo.

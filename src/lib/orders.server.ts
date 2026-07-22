@@ -12,7 +12,11 @@ import {
 import { getDatabase, hasDatabase } from "@/db/client.server";
 import type { CheckoutRequest } from "@/lib/checkout-schema";
 import type { CheckoutCatalogLine } from "@/lib/checkout-business";
-import { sendNewOrderAdminEmail, sendOrderStatusEmail } from "@/lib/email.server";
+import {
+  sendNewOrderAdminEmail,
+  sendOrderStatusEmail,
+  sendSubscriptionStatusEmail,
+} from "@/lib/email.server";
 import { getStripe } from "@/lib/stripe.server";
 
 export async function createPendingOrder(input: {
@@ -168,6 +172,54 @@ export async function applyStripeSubscriptionEvent(input: {
       .set({ status, updatedAt: new Date() })
       .where(eq(customerSubscriptions.stripeSubscriptionId, input.subscriptionId));
   });
+  const [recipient] = await getDatabase()
+    .select({
+      name: customerUsers.name,
+      email: customerUsers.email,
+      status: customerSubscriptions.status,
+    })
+    .from(customerSubscriptions)
+    .innerJoin(customerUsers, eq(customerSubscriptions.userId, customerUsers.id))
+    .where(eq(customerSubscriptions.stripeSubscriptionId, input.subscriptionId))
+    .limit(1);
+  if (recipient)
+    await sendSubscriptionStatusEmail({
+      eventId: input.id,
+      to: recipient.email,
+      name: recipient.name,
+      event:
+        input.type === "customer.subscription.deleted"
+          ? "cancelled"
+          : recipient.status === "paused"
+            ? "paused"
+            : "resumed",
+    });
+}
+export async function applyStripeInvoiceEvent(input: {
+  id: string;
+  type: "invoice.upcoming" | "invoice.payment_failed";
+  subscriptionId: string | null;
+}) {
+  if (!hasDatabase() || !input.subscriptionId) return;
+  const inserted = await getDatabase()
+    .insert(stripeEvents)
+    .values({ id: input.id, type: input.type })
+    .onConflictDoNothing()
+    .returning({ id: stripeEvents.id });
+  if (!inserted.length) return;
+  const [recipient] = await getDatabase()
+    .select({ name: customerUsers.name, email: customerUsers.email })
+    .from(customerSubscriptions)
+    .innerJoin(customerUsers, eq(customerSubscriptions.userId, customerUsers.id))
+    .where(eq(customerSubscriptions.stripeSubscriptionId, input.subscriptionId))
+    .limit(1);
+  if (recipient)
+    await sendSubscriptionStatusEmail({
+      eventId: input.id,
+      to: recipient.email,
+      name: recipient.name,
+      event: input.type === "invoice.upcoming" ? "upcoming" : "payment_failed",
+    });
 }
 export async function listOrders() {
   return hasDatabase()

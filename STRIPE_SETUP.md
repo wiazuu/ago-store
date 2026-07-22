@@ -22,6 +22,8 @@ O endpoint recebe estes eventos:
 - `checkout.session.async_payment_failed`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
+- `invoice.upcoming`
+- `invoice.payment_failed`
 
 ## Cloudflare
 

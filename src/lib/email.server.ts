@@ -247,6 +247,57 @@ export async function sendNewOrderAdminEmail(order: OrderEmail) {
   });
 }
 
+export async function sendSubscriptionStatusEmail(input: {
+  eventId: string;
+  to: string;
+  name: string;
+  event: "upcoming" | "payment_failed" | "paused" | "resumed" | "cancelled";
+}) {
+  const content = {
+    upcoming: {
+      subject: "Sua assinatura Agô será renovada em breve",
+      heading: "Próxima renovação",
+      message:
+        "Sua próxima cobrança e ciclo de refeições estão chegando. Confira seus dados e preferências na sua conta.",
+    },
+    payment_failed: {
+      subject: "Atenção ao pagamento da sua assinatura",
+      heading: "Pagamento não confirmado",
+      message:
+        "Não conseguimos confirmar a cobrança da sua assinatura. Atualize a forma de pagamento para evitar interrupções.",
+    },
+    paused: {
+      subject: "Sua assinatura Agô foi pausada",
+      heading: "Assinatura pausada",
+      message: "A pausa da sua assinatura foi registrada. Você pode retomar pela área Minha conta.",
+    },
+    resumed: {
+      subject: "Sua assinatura Agô foi retomada",
+      heading: "Assinatura ativa novamente",
+      message: "Sua assinatura foi retomada e os próximos ciclos voltarão a ser processados.",
+    },
+    cancelled: {
+      subject: "Cancelamento da assinatura Agô",
+      heading: "Assinatura cancelada",
+      message:
+        "O cancelamento da sua assinatura foi registrado. Pedidos já pagos ou em produção seguem as regras de cancelamento da loja.",
+    },
+  }[input.event];
+  const accountUrl = `${process.env.PUBLIC_SITE_URL || "https://agogf.com.br"}/minha-conta`;
+  await sendTransactionalEmail({
+    eventKey: `subscription:${input.eventId}:${input.event}`,
+    type: `subscription.${input.event}`,
+    to: input.to,
+    subject: content.subject,
+    html: layout(
+      content.heading,
+      `<p>Olá, ${escapeHtml(input.name)}.</p><p>${escapeHtml(content.message)}</p><p style="margin:28px 0"><a href="${escapeHtml(accountUrl)}" style="display:inline-block;background:#f5a623;color:#27241f;text-decoration:none;font-weight:800;padding:14px 22px;border-radius:999px">Abrir minha conta</a></p>`,
+      content.subject,
+    ),
+    text: `Olá, ${input.name}. ${content.message} Acesse ${accountUrl}.`,
+  });
+}
+
 export async function sendLowStockEmail(input: {
   productId: string;
   productName: string;
