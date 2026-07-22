@@ -1,11 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, MailWarning, ShieldCheck } from "lucide-react";
+import { Download, MailWarning, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAdminOperations } from "@/hooks/use-admin-operations";
 import { brl } from "@/lib/format";
+import { useState } from "react";
+import { toast } from "sonner";
 export const Route = createFileRoute("/central-agons-92x/relatorios")({ component: Reports });
 function Reports() {
-  const { data, loading } = useAdminOperations();
+  const { data, loading, load } = useAdminOperations();
+  const [retrying, setRetrying] = useState(false);
+  async function retryFailedEmails() {
+    if (retrying) return;
+    setRetrying(true);
+    try {
+      const response = await fetch("/api/admin-emails-retry", {
+        method: "POST",
+        headers: { "x-csrf-token": sessionStorage.getItem("ago-admin-csrf") || "" },
+      });
+      const result = (await response.json()) as {
+        error?: string;
+        attempted?: number;
+        sent?: number;
+        failed?: number;
+        skipped?: number;
+      };
+      if (!response.ok) throw new Error(result.error || "Não foi possível reenviar os e-mails.");
+      toast.success(
+        `${result.sent || 0} e-mail(s) reenviado(s). ${result.skipped || 0} ignorado(s).`,
+      );
+      await load();
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Falha ao reenviar e-mails.");
+    } finally {
+      setRetrying(false);
+    }
+  }
   function download() {
     if (!data) return;
     const rows = [
@@ -43,10 +72,16 @@ function Reports() {
           <p className="section-kicker">Inteligência operacional</p>
           <h1 className="font-display text-3xl">Relatórios e auditoria</h1>
         </div>
-        <Button onClick={download}>
-          <Download className="mr-2 h-4 w-4" />
-          Exportar pedidos
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" onClick={retryFailedEmails} disabled={retrying}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${retrying ? "animate-spin" : ""}`} />
+            {retrying ? "Reenviando..." : "Reenviar e-mails com falha"}
+          </Button>
+          <Button onClick={download}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar pedidos
+          </Button>
+        </div>
       </header>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map(([label, value]) => (

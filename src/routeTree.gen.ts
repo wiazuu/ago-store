@@ -62,6 +62,7 @@ import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiAdminStateRouteImport } from './routes/api.admin-state'
 import { Route as ApiAdminSessionRouteImport } from './routes/api.admin-session'
 import { Route as ApiAdminOperationsRouteImport } from './routes/api.admin-operations'
+import { Route as ApiAdminEmailsRetryRouteImport } from './routes/api.admin-emails-retry'
 import { Route as ApiMediaIdRouteImport } from './routes/api.media.$id'
 import { Route as ApiEmporioIdRouteImport } from './routes/api.emporio.$id'
 import { Route as ApiCheckoutSessionIdRouteImport } from './routes/api.checkout-session.$id'
@@ -340,6 +341,11 @@ const ApiAdminOperationsRoute = ApiAdminOperationsRouteImport.update({
   path: '/api/admin-operations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminEmailsRetryRoute = ApiAdminEmailsRetryRouteImport.update({
+  id: '/api/admin-emails-retry',
+  path: '/api/admin-emails-retry',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMediaIdRoute = ApiMediaIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -370,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/termos': typeof TermosRoute
+  '/api/admin-emails-retry': typeof ApiAdminEmailsRetryRoute
   '/api/admin-operations': typeof ApiAdminOperationsRoute
   '/api/admin-session': typeof ApiAdminSessionRoute
   '/api/admin-state': typeof ApiAdminStateRoute
@@ -427,6 +434,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/termos': typeof TermosRoute
+  '/api/admin-emails-retry': typeof ApiAdminEmailsRetryRoute
   '/api/admin-operations': typeof ApiAdminOperationsRoute
   '/api/admin-session': typeof ApiAdminSessionRoute
   '/api/admin-state': typeof ApiAdminStateRoute
@@ -486,6 +494,7 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/termos': typeof TermosRoute
+  '/api/admin-emails-retry': typeof ApiAdminEmailsRetryRoute
   '/api/admin-operations': typeof ApiAdminOperationsRoute
   '/api/admin-session': typeof ApiAdminSessionRoute
   '/api/admin-state': typeof ApiAdminStateRoute
@@ -546,6 +555,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/redefinir-senha'
     | '/termos'
+    | '/api/admin-emails-retry'
     | '/api/admin-operations'
     | '/api/admin-session'
     | '/api/admin-state'
@@ -603,6 +613,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/redefinir-senha'
     | '/termos'
+    | '/api/admin-emails-retry'
     | '/api/admin-operations'
     | '/api/admin-session'
     | '/api/admin-state'
@@ -661,6 +672,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/redefinir-senha'
     | '/termos'
+    | '/api/admin-emails-retry'
     | '/api/admin-operations'
     | '/api/admin-session'
     | '/api/admin-state'
@@ -720,6 +732,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   TermosRoute: typeof TermosRoute
+  ApiAdminEmailsRetryRoute: typeof ApiAdminEmailsRetryRoute
   ApiAdminOperationsRoute: typeof ApiAdminOperationsRoute
   ApiAdminSessionRoute: typeof ApiAdminSessionRoute
   ApiAdminStateRoute: typeof ApiAdminStateRoute
@@ -1116,6 +1129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminOperationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin-emails-retry': {
+      id: '/api/admin-emails-retry'
+      path: '/api/admin-emails-retry'
+      fullPath: '/api/admin-emails-retry'
+      preLoaderRoute: typeof ApiAdminEmailsRetryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/media/$id': {
       id: '/api/media/$id'
       path: '/$id'
@@ -1228,6 +1248,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   TermosRoute: TermosRoute,
+  ApiAdminEmailsRetryRoute: ApiAdminEmailsRetryRoute,
   ApiAdminOperationsRoute: ApiAdminOperationsRoute,
   ApiAdminSessionRoute: ApiAdminSessionRoute,
   ApiAdminStateRoute: ApiAdminStateRoute,
