@@ -40,6 +40,7 @@ import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as ApiPasswordResetRouteImport } from './routes/api.password-reset'
 import { Route as ApiOrdersRouteImport } from './routes/api.orders'
+import { Route as ApiMediaRouteImport } from './routes/api.media'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiEmporioRouteImport } from './routes/api.emporio'
 import { Route as ApiCustomerSessionRouteImport } from './routes/api.customer-session'
@@ -48,6 +49,7 @@ import { Route as ApiCustomerPasswordResetRouteImport } from './routes/api.custo
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiAdminStateRouteImport } from './routes/api.admin-state'
 import { Route as ApiAdminSessionRouteImport } from './routes/api.admin-session'
+import { Route as ApiMediaIdRouteImport } from './routes/api.media.$id'
 import { Route as ApiEmporioIdRouteImport } from './routes/api.emporio.$id'
 import { Route as ApiCheckoutSessionIdRouteImport } from './routes/api.checkout-session.$id'
 
@@ -211,6 +213,11 @@ const ApiOrdersRoute = ApiOrdersRouteImport.update({
   path: '/api/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaRoute = ApiMediaRouteImport.update({
+  id: '/api/media',
+  path: '/api/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
@@ -252,6 +259,11 @@ const ApiAdminSessionRoute = ApiAdminSessionRouteImport.update({
   path: '/api/admin-session',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaIdRoute = ApiMediaIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiMediaRoute,
+} as any)
 const ApiEmporioIdRoute = ApiEmporioIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -281,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/api/customer-session': typeof ApiCustomerSessionRoute
   '/api/emporio': typeof ApiEmporioRouteWithChildren
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRouteWithChildren
   '/api/orders': typeof ApiOrdersRoute
   '/api/password-reset': typeof ApiPasswordResetRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -305,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/central-agons-92x/': typeof CentralAgons92xIndexRoute
   '/api/checkout-session/$id': typeof ApiCheckoutSessionIdRoute
   '/api/emporio/$id': typeof ApiEmporioIdRoute
+  '/api/media/$id': typeof ApiMediaIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -323,6 +337,7 @@ export interface FileRoutesByTo {
   '/api/customer-session': typeof ApiCustomerSessionRoute
   '/api/emporio': typeof ApiEmporioRouteWithChildren
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRouteWithChildren
   '/api/orders': typeof ApiOrdersRoute
   '/api/password-reset': typeof ApiPasswordResetRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -347,6 +362,7 @@ export interface FileRoutesByTo {
   '/central-agons-92x': typeof CentralAgons92xIndexRoute
   '/api/checkout-session/$id': typeof ApiCheckoutSessionIdRoute
   '/api/emporio/$id': typeof ApiEmporioIdRoute
+  '/api/media/$id': typeof ApiMediaIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -367,6 +383,7 @@ export interface FileRoutesById {
   '/api/customer-session': typeof ApiCustomerSessionRoute
   '/api/emporio': typeof ApiEmporioRouteWithChildren
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRouteWithChildren
   '/api/orders': typeof ApiOrdersRoute
   '/api/password-reset': typeof ApiPasswordResetRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -391,6 +408,7 @@ export interface FileRoutesById {
   '/central-agons-92x/': typeof CentralAgons92xIndexRoute
   '/api/checkout-session/$id': typeof ApiCheckoutSessionIdRoute
   '/api/emporio/$id': typeof ApiEmporioIdRoute
+  '/api/media/$id': typeof ApiMediaIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -412,6 +430,7 @@ export interface FileRouteTypes {
     | '/api/customer-session'
     | '/api/emporio'
     | '/api/health'
+    | '/api/media'
     | '/api/orders'
     | '/api/password-reset'
     | '/api/stripe-webhook'
@@ -436,6 +455,7 @@ export interface FileRouteTypes {
     | '/central-agons-92x/'
     | '/api/checkout-session/$id'
     | '/api/emporio/$id'
+    | '/api/media/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -454,6 +474,7 @@ export interface FileRouteTypes {
     | '/api/customer-session'
     | '/api/emporio'
     | '/api/health'
+    | '/api/media'
     | '/api/orders'
     | '/api/password-reset'
     | '/api/stripe-webhook'
@@ -478,6 +499,7 @@ export interface FileRouteTypes {
     | '/central-agons-92x'
     | '/api/checkout-session/$id'
     | '/api/emporio/$id'
+    | '/api/media/$id'
   id:
     | '__root__'
     | '/'
@@ -497,6 +519,7 @@ export interface FileRouteTypes {
     | '/api/customer-session'
     | '/api/emporio'
     | '/api/health'
+    | '/api/media'
     | '/api/orders'
     | '/api/password-reset'
     | '/api/stripe-webhook'
@@ -521,6 +544,7 @@ export interface FileRouteTypes {
     | '/central-agons-92x/'
     | '/api/checkout-session/$id'
     | '/api/emporio/$id'
+    | '/api/media/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -541,6 +565,7 @@ export interface RootRouteChildren {
   ApiCustomerSessionRoute: typeof ApiCustomerSessionRoute
   ApiEmporioRoute: typeof ApiEmporioRouteWithChildren
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiMediaRoute: typeof ApiMediaRouteWithChildren
   ApiOrdersRoute: typeof ApiOrdersRoute
   ApiPasswordResetRoute: typeof ApiPasswordResetRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -770,6 +795,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/media': {
+      id: '/api/media'
+      path: '/api/media'
+      fullPath: '/api/media'
+      preLoaderRoute: typeof ApiMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/health': {
       id: '/api/health'
       path: '/api/health'
@@ -825,6 +857,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/admin-session'
       preLoaderRoute: typeof ApiAdminSessionRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/media/$id': {
+      id: '/api/media/$id'
+      path: '/$id'
+      fullPath: '/api/media/$id'
+      preLoaderRoute: typeof ApiMediaIdRouteImport
+      parentRoute: typeof ApiMediaRoute
     }
     '/api/emporio/$id': {
       id: '/api/emporio/$id'
@@ -895,6 +934,18 @@ const ApiEmporioRouteWithChildren = ApiEmporioRoute._addFileChildren(
   ApiEmporioRouteChildren,
 )
 
+interface ApiMediaRouteChildren {
+  ApiMediaIdRoute: typeof ApiMediaIdRoute
+}
+
+const ApiMediaRouteChildren: ApiMediaRouteChildren = {
+  ApiMediaIdRoute: ApiMediaIdRoute,
+}
+
+const ApiMediaRouteWithChildren = ApiMediaRoute._addFileChildren(
+  ApiMediaRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroRoute: CadastroRoute,
@@ -913,6 +964,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCustomerSessionRoute: ApiCustomerSessionRoute,
   ApiEmporioRoute: ApiEmporioRouteWithChildren,
   ApiHealthRoute: ApiHealthRoute,
+  ApiMediaRoute: ApiMediaRouteWithChildren,
   ApiOrdersRoute: ApiOrdersRoute,
   ApiPasswordResetRoute: ApiPasswordResetRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,

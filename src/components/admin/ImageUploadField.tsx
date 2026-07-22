@@ -51,7 +51,7 @@ async function optimizeImage(file: File, maxDimension: number) {
     } while (blob && blob.size > 420_000 && quality >= 0.44);
     if (!blob) throw new Error("Não foi possível converter a imagem.");
     if (blob.size > 650_000) throw new Error("A imagem ficou grande demais. Escolha outra com menos detalhes.");
-    return readAsDataUrl(blob);
+    return blob;
   } finally {
     URL.revokeObjectURL(originalUrl);
   }
@@ -66,7 +66,19 @@ export function ImageUploadField({ label = "Imagem", value, onChange, help, maxD
     if (!file) return;
     setBusy(true);
     setError("");
-    try { onChange(await optimizeImage(file, maxDimension)); }
+    try {
+      const optimized = await optimizeImage(file, maxDimension);
+      const form = new FormData();
+      form.append("file", optimized, `${file.name.replace(/\.[^.]+$/, "") || "imagem"}.webp`);
+      const response = await fetch("/api/media", {
+        method: "POST",
+        headers: { "x-csrf-token": sessionStorage.getItem("ago-admin-csrf") || "" },
+        body: form,
+      });
+      const payload = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (!response.ok || !payload?.url) throw new Error(payload?.error || "Não foi possível enviar a imagem.");
+      onChange(payload.url);
+    }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao processar imagem."); }
     finally { setBusy(false); }
   };
@@ -77,10 +89,10 @@ export function ImageUploadField({ label = "Imagem", value, onChange, help, maxD
       {value && <div className="relative aspect-[16/9] max-h-52 overflow-hidden rounded-2xl border bg-muted"><img src={value} alt="Prévia" className="h-full w-full object-cover" /><Button type="button" size="icon" variant="destructive" className="absolute right-2 top-2" aria-label="Remover imagem" onClick={() => onChange("")}><Trash2 className="h-4 w-4" /></Button></div>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <label htmlFor={inputId} className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-bold hover:bg-muted">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}{busy ? "Otimizando..." : "Enviar arquivo"}</label>
-        <Input value={value.startsWith("data:") ? "Imagem enviada e salva" : value} onChange={(event) => onChange(event.target.value)} placeholder="ou cole uma URL https://" disabled={value.startsWith("data:")} />
+        <Input value={value.startsWith("data:") ? "Imagem antiga incorporada" : value} onChange={(event) => onChange(event.target.value)} placeholder="ou cole uma URL https://" disabled={value.startsWith("data:")} />
       </div>
       <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={busy} onChange={(event) => { void upload(event.target.files?.[0]); event.currentTarget.value = ""; }} />
-      <p className="text-xs text-muted-foreground">{help || "JPG, PNG ou WebP. A imagem é comprimida e salva com o conteúdo da loja."}</p>
+      <p className="text-xs text-muted-foreground">{help || "JPG, PNG ou WebP. A imagem é comprimida e armazenada como arquivo no PostgreSQL/Neon."}</p>
       {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
     </div>
   );
