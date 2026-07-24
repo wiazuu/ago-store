@@ -1,5 +1,5 @@
 import "@tanstack/react-start/server-only";
-import { and, desc, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, lte, ne, sql } from "drizzle-orm";
 import {
   auditLogs,
   customerSubscriptions,
@@ -18,6 +18,10 @@ import {
   sendSubscriptionStatusEmail,
 } from "@/lib/email.server";
 import { getStripe } from "@/lib/stripe.server";
+
+export const PAYMENT_TIMEOUT_MINUTES = 15;
+const PAYMENT_TIMEOUT_MS = PAYMENT_TIMEOUT_MINUTES * 60 * 1000;
+let expirationSweep: Promise<{ cancelled: number; paid: number }> | null = null;
 
 export async function createPendingOrder(input: {
   id: string;
@@ -86,6 +90,12 @@ export async function applyStripeEvent(event: {
       .returning({ id: stripeEvents.id });
     if (!inserted.length) return { changed: false, paid: false };
     const [current] = await tx.select().from(shopOrders).where(eq(shopOrders.id, orderId)).limit(1);
+    if (
+      current?.paymentStatus === "refunded" ||
+      current?.status === "reembolsado" ||
+      current?.status === "cancelado"
+    )
+      return { changed: false, paid: false };
     const paid =
       event.paymentStatus === "paid" ||
       event.paymentStatus === "no_payment_required" ||
@@ -160,6 +170,13 @@ export async function reconcileStripeCheckoutSession(session: {
     const [current] = await tx.select().from(shopOrders).where(eq(shopOrders.id, orderId)).limit(1);
     if (!current) return null;
     if (current.stripeSessionId && current.stripeSessionId !== session.id) return null;
+    if (
+      current.paymentStatus === "refunded" ||
+      current.paymentStatus === "expired" ||
+      current.status === "reembolsado" ||
+      current.status === "cancelado"
+    )
+      return { order: current, changed: false };
     if (current.paymentStatus === "paid") return { order: current, changed: false };
 
     const [order] = await tx
@@ -190,6 +207,97 @@ export async function reconcileStripeCheckoutSession(session: {
   return result?.order ?? null;
 }
 
+export async function expireStalePendingOrders() {
+  if (!hasDatabase()) return { cancelled: 0, paid: 0 };
+  if (expirationSweep) return expirationSweep;
+
+  expirationSweep = (async () => {
+    const db = getDatabase();
+    const cutoff = new Date(Date.now() - PAYMENT_TIMEOUT_MS);
+    const pending = await db
+      .select()
+      .from(shopOrders)
+      .where(
+        and(
+          eq(shopOrders.paymentStatus, "unpaid"),
+          eq(shopOrders.status, "aguardando-pagamento"),
+          lte(shopOrders.createdAt, cutoff),
+        ),
+      )
+      .orderBy(shopOrders.createdAt)
+      .limit(100);
+    let cancelled = 0;
+    let paid = 0;
+
+    for (const pendingOrder of pending) {
+      if (pendingOrder.stripeSessionId) {
+        try {
+          let session = await getStripe().checkout.sessions.retrieve(pendingOrder.stripeSessionId);
+          if (["paid", "no_payment_required"].includes(session.payment_status)) {
+            await reconcileStripeCheckoutSession(session);
+            paid++;
+            continue;
+          }
+          if (session.status === "open") {
+            session = await getStripe().checkout.sessions.expire(session.id);
+            if (["paid", "no_payment_required"].includes(session.payment_status)) {
+              await reconcileStripeCheckoutSession(session);
+              paid++;
+              continue;
+            }
+          }
+          if (session.status !== "expired") continue;
+        } catch (error) {
+          console.error("ago.checkout.expiration_failed", {
+            orderId: pendingOrder.id,
+            sessionId: pendingOrder.stripeSessionId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          continue;
+        }
+      }
+
+      const cancelledOrder = await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(shopOrders)
+          .set({
+            status: "cancelado",
+            paymentStatus: "expired",
+            completedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(shopOrders.id, pendingOrder.id),
+              eq(shopOrders.paymentStatus, "unpaid"),
+              eq(shopOrders.status, "aguardando-pagamento"),
+            ),
+          )
+          .returning();
+        if (!row) return null;
+        await tx.insert(orderStatusHistory).values({
+          orderId: row.id,
+          status: "cancelado",
+          actorType: "system",
+          note: `payment-timeout-${PAYMENT_TIMEOUT_MINUTES}-minutes`,
+        });
+        return row;
+      });
+      if (cancelledOrder) {
+        cancelled++;
+        await sendOrderStatusEmail(cancelledOrder, "cancelled");
+      }
+    }
+    return { cancelled, paid };
+  })();
+
+  try {
+    return await expirationSweep;
+  } finally {
+    expirationSweep = null;
+  }
+}
+
 async function reconcileRecentStripePayments() {
   if (!hasDatabase()) return;
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -199,6 +307,8 @@ async function reconcileRecentStripePayments() {
     .where(
       and(
         ne(shopOrders.paymentStatus, "paid"),
+        ne(shopOrders.paymentStatus, "refunded"),
+        ne(shopOrders.paymentStatus, "expired"),
         isNotNull(shopOrders.stripeSessionId),
         gte(shopOrders.createdAt, since),
       ),
@@ -290,10 +400,55 @@ export async function applyStripeInvoiceEvent(input: {
       event: input.type === "invoice.upcoming" ? "upcoming" : "payment_failed",
     });
 }
+export async function applyStripeRefundEvent(input: {
+  id: string;
+  type: string;
+  orderId: string | null;
+  refundStatus?: string | null;
+}) {
+  if (!hasDatabase() || !input.orderId) return;
+  if (input.refundStatus === "failed" || input.refundStatus === "canceled") return;
+  const orderId = input.orderId;
+  const result = await getDatabase().transaction(async (tx) => {
+    const inserted = await tx
+      .insert(stripeEvents)
+      .values({ id: input.id, type: input.type })
+      .onConflictDoNothing()
+      .returning({ id: stripeEvents.id });
+    if (!inserted.length) return null;
+    const [current] = await tx.select().from(shopOrders).where(eq(shopOrders.id, orderId)).limit(1);
+    if (!current || current.paymentStatus === "refunded") return null;
+    const [order] = await tx
+      .update(shopOrders)
+      .set({
+        status: "reembolsado",
+        paymentStatus: "refunded",
+        completedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(shopOrders.id, orderId))
+      .returning();
+    if (!order) return null;
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      status: "reembolsado",
+      actorType: "stripe",
+      note: `${input.type}:${input.refundStatus || "created"}`,
+    });
+    return order;
+  });
+  if (result) await sendOrderStatusEmail(result, "refunded");
+}
 export async function listOrders() {
   if (!hasDatabase()) return [];
+  await expireStalePendingOrders();
   await reconcileRecentStripePayments();
-  return getDatabase().select().from(shopOrders).orderBy(desc(shopOrders.createdAt)).limit(500);
+  return getDatabase()
+    .select()
+    .from(shopOrders)
+    .where(and(ne(shopOrders.status, "cancelado"), ne(shopOrders.status, "reembolsado")))
+    .orderBy(desc(shopOrders.createdAt))
+    .limit(500);
 }
 export async function updateOrderStatus(
   id: string,
@@ -336,7 +491,7 @@ export async function updateOrderStatus(
       .set({
         status,
         paymentStatus: status === "reembolsado" ? "refunded" : undefined,
-        completedAt: status === "entregue" ? new Date() : null,
+        completedAt: ["entregue", "cancelado", "reembolsado"].includes(status) ? new Date() : null,
         updatedAt: new Date(),
       })
       .where(eq(shopOrders.id, id))
@@ -393,4 +548,21 @@ export async function updateOrderStatus(
   ];
   if (order && emailEvent) await sendOrderStatusEmail(order, emailEvent);
   return order;
+}
+
+type PaymentExpirationRuntime = typeof globalThis & {
+  __agoPaymentExpirationTimer?: ReturnType<typeof setInterval>;
+};
+const paymentExpirationRuntime = globalThis as PaymentExpirationRuntime;
+if (!paymentExpirationRuntime.__agoPaymentExpirationTimer) {
+  const timer = setInterval(() => {
+    void expireStalePendingOrders().catch((error) =>
+      console.error(
+        "ago.checkout.expiration_sweep_failed",
+        error instanceof Error ? error.message : error,
+      ),
+    );
+  }, 60_000);
+  timer.unref?.();
+  paymentExpirationRuntime.__agoPaymentExpirationTimer = timer;
 }

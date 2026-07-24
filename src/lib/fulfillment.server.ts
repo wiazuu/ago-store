@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only";
 import { and, gte, lte, ne } from "drizzle-orm";
 import { deliveryCalendarDays, shopOrders } from "@/db/schema";
 import { getDatabase, hasDatabase } from "@/db/client.server";
+import { expireStalePendingOrders } from "@/lib/orders.server";
 
 export type FulfillmentDay = {
   day: string;
@@ -25,14 +26,13 @@ const dayKey = (date: Date) =>
 const addDays = (date: Date, amount: number) => new Date(date.getTime() + amount * 86_400_000);
 
 function defaultDay(day: string): Omit<FulfillmentDay, "reserved" | "available"> {
-  const weekday = new Date(`${day}T12:00:00-04:00`).getDay();
   return {
     day,
-    deliveryEnabled: weekday !== 0,
-    pickupEnabled: weekday !== 0,
+    deliveryEnabled: true,
+    pickupEnabled: true,
     capacity: 80,
     cutoffAt: `${day}T00:00:00-04:00`,
-    note: weekday === 0 ? "Produção fechada aos domingos" : null,
+    note: null,
   };
 }
 
@@ -50,8 +50,11 @@ function itemCount(value: unknown) {
 }
 
 export async function listFulfillmentDays(days = 45): Promise<FulfillmentDay[]> {
-  const start = dayKey(addDays(new Date(), 1));
-  const end = dayKey(addDays(new Date(), days));
+  await expireStalePendingOrders();
+  // Dois dias completos para produção: no dia 23, a primeira opção é o dia 26.
+  const firstAvailableOffset = 3;
+  const start = dayKey(addDays(new Date(), firstAvailableOffset));
+  const end = dayKey(addDays(new Date(), days + firstAvailableOffset - 1));
   const overrides = hasDatabase()
     ? await getDatabase()
         .select()
@@ -82,35 +85,35 @@ export async function listFulfillmentDays(days = 45): Promise<FulfillmentDay[]> 
       order.day &&
       (order.paymentStatus === "paid" ||
         (order.paymentStatus === "unpaid" &&
-          order.updatedAt.getTime() > Date.now() - 60 * 60 * 1000))
+          order.updatedAt.getTime() > Date.now() - 15 * 60 * 1000))
     )
       reserved.set(order.day, (reserved.get(order.day) || 0) + itemCount(order.items));
 
-  return Array.from({ length: days }, (_, index) => dayKey(addDays(new Date(), index + 1))).map(
-    (day) => {
-      const base = defaultDay(day);
-      const override = overrideByDay.get(day);
-      const row = override
-        ? {
-            day,
-            deliveryEnabled: override.deliveryEnabled,
-            pickupEnabled: override.pickupEnabled,
-            capacity: override.capacity,
-            cutoffAt: override.cutoffAt?.toISOString() || null,
-            note: override.note,
-          }
-        : base;
-      const used = reserved.get(day) || 0;
-      const cutoffPassed = row.cutoffAt ? new Date(row.cutoffAt).getTime() <= Date.now() : false;
-      return {
-        ...row,
-        deliveryEnabled: row.deliveryEnabled && !cutoffPassed && used < row.capacity,
-        pickupEnabled: row.pickupEnabled && !cutoffPassed && used < row.capacity,
-        reserved: used,
-        available: Math.max(0, row.capacity - used),
-      };
-    },
-  );
+  return Array.from({ length: days }, (_, index) =>
+    dayKey(addDays(new Date(), index + firstAvailableOffset)),
+  ).map((day) => {
+    const base = defaultDay(day);
+    const override = overrideByDay.get(day);
+    const row = override
+      ? {
+          day,
+          deliveryEnabled: override.deliveryEnabled,
+          pickupEnabled: override.pickupEnabled,
+          capacity: override.capacity,
+          cutoffAt: override.cutoffAt?.toISOString() || null,
+          note: override.note,
+        }
+      : base;
+    const used = reserved.get(day) || 0;
+    const cutoffPassed = row.cutoffAt ? new Date(row.cutoffAt).getTime() <= Date.now() : false;
+    return {
+      ...row,
+      deliveryEnabled: row.deliveryEnabled && !cutoffPassed && used < row.capacity,
+      pickupEnabled: row.pickupEnabled && !cutoffPassed && used < row.capacity,
+      reserved: used,
+      available: Math.max(0, row.capacity - used),
+    };
+  });
 }
 
 export async function assertFulfillmentAvailable(input: {

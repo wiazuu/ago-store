@@ -38,6 +38,7 @@ const paymentLabels: Record<string, string> = {
   paid: "Pago",
   unpaid: "Aguardando confirmaÃ§Ã£o",
   failed: "Falhou",
+  expired: "Cancelado por falta de pagamento",
   refunded: "Reembolsado",
   no_payment_required: "Pago",
 };
@@ -79,7 +80,9 @@ function AdminOrders() {
     });
     if (response.ok)
       setOrders((current) =>
-        current.map((order) => (order.id === id ? { ...order, status } : order)),
+        ["cancelado", "reembolsado"].includes(status)
+          ? current.filter((order) => order.id !== id)
+          : current.map((order) => (order.id === id ? { ...order, status } : order)),
       );
     else setError("Não foi possível atualizar o pedido.");
   }

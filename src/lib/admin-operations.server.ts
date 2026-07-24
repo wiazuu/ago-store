@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only";
 import { desc } from "drizzle-orm";
 import { auditLogs, customerUsers, emailDeliveries, shopOrders } from "@/db/schema";
 import { getDatabase } from "@/db/client.server";
+import { expireStalePendingOrders } from "@/lib/orders.server";
 
 type Line = {
   productId?: string;
@@ -18,6 +19,7 @@ const dateKey = (value: Date) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "America/Manaus" }).format(value);
 
 export async function getAdminOperations() {
+  await expireStalePendingOrders();
   const db = getDatabase();
   const [orders, customers, audits, emails] = await Promise.all([
     db.select().from(shopOrders).orderBy(desc(shopOrders.createdAt)).limit(1000),

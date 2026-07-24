@@ -9,9 +9,11 @@ import {
   shopOrders,
 } from "@/db/schema";
 import { getDatabase } from "@/db/client.server";
+import { expireStalePendingOrders } from "@/lib/orders.server";
 import { getStripe } from "@/lib/stripe.server";
 
 export async function getCustomerAccount(user: { userId: string; email: string }) {
+  await expireStalePendingOrders();
   const db = getDatabase();
   await db
     .update(customerUsers)

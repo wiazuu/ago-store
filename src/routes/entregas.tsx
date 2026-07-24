@@ -21,6 +21,14 @@ function DeliveryPolicy() {
             ou após o prazo de corte configurado no calendário.
           </p>
           <p>
+            <strong>Prazo de produção:</strong> reservamos dois dias completos para preparar as
+            refeições. Por exemplo, um pedido feito no dia 23 pode ser agendado a partir do dia 26.
+          </p>
+          <p>
+            <strong>Pagamento:</strong> pedidos que não forem pagos em até 15 minutos serão
+            cancelados automaticamente e deixarão de reservar vaga na produção.
+          </p>
+          <p>
             <strong>Alteração ou cancelamento:</strong> entre em contato antes do prazo de corte.
             Após o início da produção, a solicitação será analisada conforme o estágio do pedido.
           </p>

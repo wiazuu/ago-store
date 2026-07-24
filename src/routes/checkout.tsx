@@ -376,6 +376,10 @@ function CheckoutPage() {
                   Entregamos em toda Manaus por R$ 15 ou você pode retirar gratuitamente no nosso
                   local.
                 </p>
+                <p className="mt-3 rounded-xl bg-orange-soft px-4 py-3 text-sm text-charcoal">
+                  Precisamos de dois dias completos para preparar seu pedido. Por isso, um pedido
+                  feito no dia 23 fica disponível para entrega ou retirada a partir do dia 26.
+                </p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   <button
                     type="button"

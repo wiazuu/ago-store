@@ -4,6 +4,7 @@ import { getStripe, getStripeWebhookSecret } from "@/lib/stripe.server";
 import {
   applyStripeEvent,
   applyStripeInvoiceEvent,
+  applyStripeRefundEvent,
   applyStripeSubscriptionEvent,
 } from "@/lib/orders.server";
 
@@ -90,6 +91,44 @@ export const Route = createFileRoute("/api/stripe-webhook")({
               eventId: event.id,
               sessionId: event.data.object.id,
               orderId: event.data.object.client_reference_id,
+            });
+          }
+
+          if (event.type === "refund.created" || event.type === "refund.updated") {
+            const refund = event.data.object;
+            let orderId = refund.metadata?.order_id || null;
+            const paymentIntentId =
+              typeof refund.payment_intent === "string"
+                ? refund.payment_intent
+                : refund.payment_intent?.id;
+            if (!orderId && paymentIntentId) {
+              const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+              orderId = paymentIntent.metadata?.order_id || null;
+            }
+            await applyStripeRefundEvent({
+              id: event.id,
+              type: event.type,
+              orderId,
+              refundStatus: refund.status,
+            });
+          }
+
+          if (event.type === "charge.refunded") {
+            const charge = event.data.object;
+            let orderId = charge.metadata?.order_id || null;
+            const paymentIntentId =
+              typeof charge.payment_intent === "string"
+                ? charge.payment_intent
+                : charge.payment_intent?.id;
+            if (!orderId && paymentIntentId) {
+              const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+              orderId = paymentIntent.metadata?.order_id || null;
+            }
+            await applyStripeRefundEvent({
+              id: event.id,
+              type: event.type,
+              orderId,
+              refundStatus: charge.refunded ? "succeeded" : null,
             });
           }
 
